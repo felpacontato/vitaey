@@ -1,0 +1,11 @@
+{
+  "name": "vitaey",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "web:dev": "pnpm --dir apps/web run dev",
+    "web:build": "pnpm --dir apps/web run build",
+    "api:test": "cd apps/api && pytest",
+    "api:dev": "cd apps/api && uvicorn app.main:app --reload --port 8010"
+  }
+}

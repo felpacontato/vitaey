@@ -1,0 +1,1 @@
+"""Vitaey API package."""

@@ -1,4 +1,5 @@
 export type WorkModel = "remote" | "hybrid" | "onsite";
+export type Contract = "CLT" | "PJ" | "Contrato" | "Estagio";
 export type Stage = "saved" | "prepared" | "applied" | "interviewing" | "offered";
 
 export type Job = {
@@ -7,11 +8,14 @@ export type Job = {
   company: string;
   location: string;
   workModel: WorkModel;
-  contract: "CLT" | "PJ";
+  contract: Contract;
   seniority: string;
   salary: string;
+  salaryMin: number | null;
+  salaryMax: number | null;
   score: number;
   posted: string;
+  postedDaysAgo: number;
   requirements: string[];
   benefits: string[];
   description: string;
@@ -38,8 +42,11 @@ export const jobs: Job[] = [
     contract: "CLT",
     seniority: "Pleno",
     salary: "R$ 9.000 - 12.500",
+    salaryMin: 9000,
+    salaryMax: 12500,
     score: 92,
     posted: "2 dias",
+    postedDaysAgo: 2,
     requirements: ["UX Research", "Figma", "Design System", "SaaS", "Prototipacao"],
     benefits: ["Remoto", "Plano de saude", "Auxilio educacao"],
     description:
@@ -55,8 +62,11 @@ export const jobs: Job[] = [
     contract: "CLT",
     seniority: "Senior",
     salary: "R$ 11.000 - 14.500",
+    salaryMin: 11000,
+    salaryMax: 14500,
     score: 84,
     posted: "5 dias",
+    postedDaysAgo: 5,
     requirements: ["UX Research", "Analytics", "Entrevistas", "Discovery"],
     benefits: ["Hibrido", "Bonus anual", "Seguro saude"],
     description:
@@ -72,8 +82,11 @@ export const jobs: Job[] = [
     contract: "PJ",
     seniority: "Pleno",
     salary: "R$ 12.000 - 17.000",
+    salaryMin: 12000,
+    salaryMax: 17000,
     score: 78,
     posted: "1 dia",
+    postedDaysAgo: 1,
     requirements: ["Roadmap", "Analytics", "Discovery", "SaaS", "Stakeholders"],
     benefits: ["Remoto", "Horario flexivel", "Orcamento para cursos"],
     description:

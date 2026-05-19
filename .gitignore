@@ -1,8 +1,11 @@
 node_modules/
 dist/
+test-results/
+playwright-report/
 *.log
 *.tsbuildinfo
 .venv/
+*.egg-info/
 __pycache__/
 .pytest_cache/
 .ruff_cache/

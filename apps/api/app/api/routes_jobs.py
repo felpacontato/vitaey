@@ -1,8 +1,7 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 
 from app.core.http import find_or_404
-from app.models.domain import JobListing, Recommendation
-from app.schemas.requests import JobFilters
+from app.models.domain import EmploymentType, JobListing, Recommendation, WorkModel
 from app.services.matching import rank_jobs
 from app.services.sample_data import candidate, jobs
 
@@ -10,21 +9,28 @@ router = APIRouter()
 
 
 @router.get("/jobs", response_model=list[JobListing])
-def list_jobs(filters: JobFilters = JobFilters()) -> list[JobListing]:
+def list_jobs(
+    keyword: str | None = None,
+    location: str | None = None,
+    work_model: WorkModel | None = None,
+    employment_type: EmploymentType | None = None,
+    seniority: str | None = None,
+    min_salary: int | None = Query(default=None, ge=0),
+) -> list[JobListing]:
     filtered = jobs
-    if filters.keyword:
-        needle = filters.keyword.lower()
+    if keyword:
+        needle = keyword.lower()
         filtered = [job for job in filtered if needle in f"{job.title} {job.company} {job.description}".lower()]
-    if filters.location:
-        filtered = [job for job in filtered if filters.location.lower() in job.location.lower()]
-    if filters.work_model:
-        filtered = [job for job in filtered if job.work_model == filters.work_model]
-    if filters.employment_type:
-        filtered = [job for job in filtered if job.employment_type == filters.employment_type]
-    if filters.seniority:
-        filtered = [job for job in filtered if filters.seniority.lower() == job.seniority.lower()]
-    if filters.min_salary:
-        filtered = [job for job in filtered if (job.salary_max or 0) >= filters.min_salary]
+    if location:
+        filtered = [job for job in filtered if location.lower() in job.location.lower()]
+    if work_model:
+        filtered = [job for job in filtered if job.work_model == work_model]
+    if employment_type:
+        filtered = [job for job in filtered if job.employment_type == employment_type]
+    if seniority:
+        filtered = [job for job in filtered if seniority.lower() == job.seniority.lower()]
+    if min_salary:
+        filtered = [job for job in filtered if (job.salary_max or 0) >= min_salary]
     return filtered
 
 

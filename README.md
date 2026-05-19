@@ -39,6 +39,18 @@ pnpm install
 pnpm run dev
 ```
 
+Validation:
+
+```bash
+cd apps/api
+.venv\Scripts\python.exe -m pytest
+.venv\Scripts\python.exe -m ruff check .
+
+cd ..\web
+pnpm run build
+pnpm run test:e2e
+```
+
 ## Current Scope
 
 This first version creates the product foundation:

@@ -2,6 +2,7 @@
   "name": "vitaey",
   "private": true,
   "version": "0.1.0",
+  "packageManager": "pnpm@11.0.8",
   "scripts": {
     "web:dev": "pnpm --dir apps/web run dev",
     "web:build": "pnpm --dir apps/web run build",

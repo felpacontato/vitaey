@@ -8,9 +8,9 @@ test("filters jobs and completes a reviewed application", async ({ page }, testI
     }
   });
 
-  await page.goto("/");
+  await page.goto("/", { waitUntil: "domcontentloaded" });
   await expect(page.locator("h1")).toContainText("Radar de oportunidades");
-  await expect(page.locator(".api-pill")).toContainText(/API ativa|Modo local|Conectando/);
+  await expect(page.locator(".api-pill")).toContainText(/API ativa|Modo local|Conectando|Supabase ativo/);
 
   const hasHorizontalOverflow = await page.evaluate(
     () => document.documentElement.scrollWidth > document.documentElement.clientWidth,

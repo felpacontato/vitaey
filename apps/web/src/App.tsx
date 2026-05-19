@@ -18,7 +18,9 @@ import {
   fetchApplications,
   fetchRecommendedJobs,
   prepareApplication,
+  saveApplication,
 } from "./api";
+import { getCurrentSession, hasSupabaseConfig, onAuthStateChange, signInWithGoogle, signOut } from "./supabase";
 import { initialApplications, jobs as fallbackJobs, type Application, type Contract, type Job, type Stage, type WorkModel } from "./data/mock";
 
 const stages: Array<{ id: Stage; label: string }> = [
@@ -42,10 +44,45 @@ function App() {
   const [applyJob, setApplyJob] = useState<Job | null>(null);
   const [reviewed, setReviewed] = useState<string[]>(["profile"]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [apiStatus, setApiStatus] = useState<"connecting" | "live" | "offline">("connecting");
+  const [apiStatus, setApiStatus] = useState<"connecting" | "live" | "offline" | "supabase">("connecting");
+  const [sessionEmail, setSessionEmail] = useState<string | null>(null);
+  const [authNotice, setAuthNotice] = useState("");
 
   useEffect(() => {
     let isMounted = true;
+
+    getCurrentSession()
+      .then((session) => {
+        if (!isMounted) return;
+        setSessionEmail(session?.user.email ?? null);
+      })
+      .catch(() => {
+        if (!isMounted) return;
+        setSessionEmail(null);
+      });
+
+    const unsubscribe = onAuthStateChange((session) => {
+      setSessionEmail(session?.user.email ?? null);
+      setAuthNotice("");
+      void refreshData();
+    });
+
+    async function refreshData() {
+      try {
+        const [recommendedJobs, serverApplications] = await Promise.all([
+          fetchRecommendedJobs(),
+          hasSupabaseConfig && !sessionEmail ? Promise.resolve([]) : fetchApplications(),
+        ]);
+        if (!isMounted) return;
+        setJobs(recommendedJobs);
+        setSelectedJob(recommendedJobs[0] ?? fallbackJobs[0]);
+        setApplications(serverApplications);
+        setApiStatus(hasSupabaseConfig ? "supabase" : "live");
+      } catch {
+        if (!isMounted) return;
+        setApiStatus("offline");
+      }
+    }
 
     Promise.all([fetchRecommendedJobs(), fetchApplications()])
       .then(([recommendedJobs, serverApplications]) => {
@@ -53,7 +90,7 @@ function App() {
         setJobs(recommendedJobs);
         setSelectedJob(recommendedJobs[0] ?? fallbackJobs[0]);
         setApplications(serverApplications);
-        setApiStatus("live");
+        setApiStatus(hasSupabaseConfig ? "supabase" : "live");
       })
       .catch(() => {
         if (!isMounted) return;
@@ -62,8 +99,9 @@ function App() {
 
     return () => {
       isMounted = false;
+      unsubscribe();
     };
-  }, []);
+  }, [sessionEmail]);
 
   useEffect(() => {
     if (!jobs.some((job) => job.id === selectedJob.id)) {
@@ -97,25 +135,40 @@ function App() {
     ]);
   }
 
-  function saveJob(job: Job) {
+  async function saveJob(job: Job) {
+    if (hasSupabaseConfig && !sessionEmail) {
+      setAuthNotice("Entre com Google para salvar e rastrear candidaturas no Supabase.");
+      return;
+    }
     if (applications.some((item) => item.jobId === job.id)) return;
-    upsertApplication({
-      id: `app_${job.id}`,
-      jobId: job.id,
-      title: job.title,
-      company: job.company,
-      stage: "saved",
-      tags: [`${job.score}% match`, modelLabel(job.workModel).toLowerCase()],
-    });
+    try {
+      const saved = await saveApplication(job, "saved");
+      upsertApplication(saved);
+      setApiStatus(hasSupabaseConfig ? "supabase" : "live");
+    } catch {
+      upsertApplication({
+        id: `app_${job.id}`,
+        jobId: job.id,
+        title: job.title,
+        company: job.company,
+        stage: "saved",
+        tags: [`${job.score}% match`, modelLabel(job.workModel).toLowerCase()],
+      });
+      setApiStatus("offline");
+    }
   }
 
   async function startApplication(job: Job) {
+    if (hasSupabaseConfig && !sessionEmail) {
+      setAuthNotice("Entre com Google para preparar e salvar esta candidatura com seguranca.");
+      return;
+    }
     setApplyJob(job);
     setReviewed(["profile"]);
     try {
-      const prepared = await prepareApplication(job.id);
+      const prepared = await prepareApplication(job);
       upsertApplication(prepared);
-      setApiStatus("live");
+      setApiStatus(hasSupabaseConfig ? "supabase" : "live");
     } catch {
       upsertApplication({
         id: `app_${job.id}`,
@@ -147,11 +200,11 @@ function App() {
     const existing = applications.find((item) => item.jobId === applyJob.id);
 
     try {
-      const prepared = existing ?? (await prepareApplication(applyJob.id));
+      const prepared = existing ?? (await prepareApplication(applyJob));
       upsertApplication(prepared);
       const confirmed = await confirmApplicationSubmission(prepared.id, reviewed);
       upsertApplication(confirmed);
-      setApiStatus("live");
+      setApiStatus(hasSupabaseConfig ? "supabase" : "live");
     } catch {
       upsertApplication(fallbackAppliedApplication(applyJob));
       setApiStatus("offline");
@@ -203,12 +256,29 @@ function App() {
             <p>Priorize vagas com aderencia real, curriculo ajustado e rastreio completo.</p>
           </div>
           <div className="status-cluster">
-            <span className={`api-pill ${apiStatus}`}>{apiStatus === "live" ? "API ativa" : apiStatus === "offline" ? "Modo local" : "Conectando"}</span>
+            <span className={`api-pill ${apiStatus}`}>{statusLabel(apiStatus)}</span>
+            {hasSupabaseConfig ? (
+              sessionEmail ? (
+                <button className="auth-button" onClick={() => void signOut()} title={sessionEmail}>
+                  Sair
+                </button>
+              ) : (
+                <button className="auth-button" onClick={() => void signInWithGoogle()}>
+                  Entrar com Google
+                </button>
+              )
+            ) : null}
             <button className="icon-button" aria-label="Ver lembretes">
               <Bell />
             </button>
           </div>
         </header>
+
+        {authNotice ? (
+          <div className="auth-notice" role="status">
+            {authNotice}
+          </div>
+        ) : null}
 
         <section className="metrics" id="dashboard" aria-label="Resumo">
           <Metric label="Vagas salvas" value={savedCount} tone="mint" />
@@ -299,7 +369,7 @@ function App() {
                   </div>
                   <div className="card-actions">
                     <button onClick={(event) => { event.stopPropagation(); setSelectedJob(job); }}>Detalhes</button>
-                    <button onClick={(event) => { event.stopPropagation(); saveJob(job); }}>Salvar</button>
+                    <button onClick={(event) => { event.stopPropagation(); void saveJob(job); }}>Salvar</button>
                     <button className="primary" onClick={(event) => { event.stopPropagation(); void startApplication(job); }}>
                       Aplicar
                     </button>
@@ -447,6 +517,16 @@ function modelLabel(model: WorkModel) {
     onsite: "Presencial",
   };
   return labels[model];
+}
+
+function statusLabel(status: "connecting" | "live" | "offline" | "supabase") {
+  const labels = {
+    connecting: "Conectando",
+    live: "API ativa",
+    offline: "Modo local",
+    supabase: "Supabase ativo",
+  };
+  return labels[status];
 }
 
 export default App;

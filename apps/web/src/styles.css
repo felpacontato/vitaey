@@ -190,6 +190,36 @@ button:disabled {
   color: #5c4920;
 }
 
+.api-pill.supabase {
+  border-color: rgba(73, 214, 209, 0.36);
+  background: #e6fbf9;
+  color: #15504d;
+}
+
+.auth-button {
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid #d8e2dc;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #173d2f;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.auth-button:hover {
+  border-color: #37b982;
+}
+
+.auth-notice {
+  padding: 12px 14px;
+  border: 1px solid rgba(222, 153, 37, 0.32);
+  border-radius: 14px;
+  background: #fff3d8;
+  color: #5c4920;
+  font-weight: 700;
+}
+
 h1,
 h2,
 h3,
@@ -684,6 +714,7 @@ h3 {
   }
 
   .status-cluster {
+    flex-wrap: wrap;
     justify-content: space-between;
   }
 

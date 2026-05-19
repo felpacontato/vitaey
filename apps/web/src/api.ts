@@ -129,10 +129,6 @@ function resolveApiBaseUrl(): string {
     return import.meta.env.VITE_API_BASE_URL;
   }
 
-  if (globalThis.location?.hostname === "localhost" || globalThis.location?.hostname === "127.0.0.1") {
-    return "http://127.0.0.1:8010";
-  }
-
   return "";
 }
 

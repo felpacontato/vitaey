@@ -1,17 +1,24 @@
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
 import {
   ArrowRight,
   Bell,
   BriefcaseBusiness,
   Check,
+  Clock3,
   FileText,
   Filter,
+  Gauge,
   Hand,
   LayoutDashboard,
+  Layers3,
   LockKeyhole,
+  MapPin,
   Search,
   ShieldCheck,
   Sparkles,
+  Target,
+  UploadCloud,
+  UserRound,
 } from "lucide-react";
 import {
   confirmApplicationSubmission,
@@ -47,6 +54,21 @@ const stages: Array<{ id: Stage; label: string }> = [
   { id: "applied", label: "Enviadas" },
   { id: "interviewing", label: "Entrevistas" },
   { id: "offered", label: "Ofertas" },
+];
+
+const workflow = [
+  {
+    title: "Perfil calibrado",
+    copy: "Preferências, skills e salário mínimo ajustam o ranking sem expor dados desnecessários.",
+  },
+  {
+    title: "Aplicação revisada",
+    copy: "Cada candidatura exige confirmação manual antes de ser registrada.",
+  },
+  {
+    title: "Pipeline claro",
+    copy: "O histórico fica organizado por etapa para o candidato decidir o próximo movimento.",
+  },
 ];
 
 function App() {
@@ -166,6 +188,9 @@ function App() {
   const savedCount = applications.filter((item) => item.stage === "saved").length;
   const activeCount = applications.filter((item) => item.stage !== "offered").length;
   const interviewCount = applications.filter((item) => item.stage === "interviewing").length;
+  const bestMatch = jobs.length ? Math.max(...jobs.map((job) => job.score)) : 0;
+  const activeFilters = [workModel, contract, seniority, location].filter((item) => item !== "all").length + (minSalary ? 1 : 0);
+  const pipelineProgress = applications.length ? Math.round((applications.filter((item) => item.stage !== "saved").length / applications.length) * 100) : 0;
 
   function upsertApplication(application: Application) {
     setApplications((items) => [
@@ -176,7 +201,7 @@ function App() {
 
   async function saveJob(job: Job) {
     if (hasSupabaseConfig && !sessionEmail) {
-      setAuthNotice("Entre com Google para salvar e rastrear candidaturas no Supabase.");
+      setAuthNotice("Entre com Google para salvar e acompanhar candidaturas com segurança.");
       return;
     }
     if (applications.some((item) => item.jobId === job.id)) return;
@@ -199,7 +224,7 @@ function App() {
 
   async function startApplication(job: Job) {
     if (hasSupabaseConfig && !sessionEmail) {
-      setAuthNotice("Entre com Google para preparar e salvar esta candidatura com seguranca.");
+      setAuthNotice("Entre com Google para preparar e salvar esta candidatura com segurança.");
       return;
     }
     setApplyJob(job);
@@ -254,9 +279,6 @@ function App() {
     }
   }
 
-  const bestMatch = jobs.length ? Math.max(...jobs.map((job) => job.score)) : 0;
-  const activeFilters = [workModel, contract, seniority, location].filter((item) => item !== "all").length + (minSalary ? 1 : 0);
-
   async function moveApplication(id: string, stage: Stage) {
     const current = applications.find((item) => item.id === id);
     if (!current) return;
@@ -292,7 +314,7 @@ function App() {
       setSelectedJob(personalized[0] ?? selectedJob);
       setApiStatus(hasSupabaseConfig ? "supabase" : "live");
     } catch {
-      setAuthNotice("Nao foi possivel salvar o perfil agora.");
+      setAuthNotice("Não foi possível salvar o perfil agora.");
       setApiStatus("offline");
     } finally {
       setProfileSaving(false);
@@ -302,7 +324,7 @@ function App() {
   async function handleResumeUpload(file: File | null) {
     if (!file) return;
     if (hasSupabaseConfig && !sessionEmail) {
-      setAuthNotice("Entre com Google para enviar curriculo.");
+      setAuthNotice("Entre com Google para enviar currículo.");
       return;
     }
     setResumeUploading(true);
@@ -316,7 +338,7 @@ function App() {
       setSelectedJob(personalized[0] ?? selectedJob);
       setApiStatus("supabase");
     } catch {
-      setAuthNotice("Nao foi possivel processar o curriculo agora.");
+      setAuthNotice("Não foi possível processar o currículo agora.");
       setApiStatus("offline");
     } finally {
       setResumeUploading(false);
@@ -330,27 +352,27 @@ function App() {
           <div className="brand-mark">V</div>
           <div>
             <strong>Vitaey</strong>
-            <span>AI job search</span>
+            <span>Carreira com controle</span>
           </div>
         </div>
-        <nav className="nav-list" aria-label="Navegacao principal">
-          <a className="active" href="#dashboard"><LayoutDashboard /> Dashboard</a>
+        <nav className="nav-list" aria-label="Navegação principal">
+          <a className="active" href="#dashboard"><LayoutDashboard /> Visão geral</a>
           <a href="#vagas"><BriefcaseBusiness /> Vagas</a>
-          <a href="#curriculo"><FileText /> Curriculo</a>
+          <a href="#curriculo"><FileText /> Currículo</a>
           <a href="#kanban"><ShieldCheck /> Candidaturas</a>
         </nav>
         <div className="compliance-card">
           <LockKeyhole />
-          <strong>Modo seguro</strong>
-          <p>Nenhuma candidatura e enviada sem clique e revisao final do usuario.</p>
+          <strong>Controle do candidato</strong>
+          <p>Nenhuma candidatura é enviada sem revisão e confirmação manual.</p>
         </div>
       </aside>
 
       <section className="workspace">
         <header className="topbar">
           <div>
-            <h1>Radar de oportunidades</h1>
-            <p>Priorize vagas com aderencia real, curriculo ajustado e rastreio completo.</p>
+            <span className="eyebrow">Workspace pessoal</span>
+            <h1>Vitaey</h1>
           </div>
           <div className="status-cluster">
             <span className={`api-pill ${apiStatus}`}>{statusLabel(apiStatus)}</span>
@@ -371,25 +393,78 @@ function App() {
           </div>
         </header>
 
+        <section className="hero-surface" id="dashboard" aria-label="Resumo do Vitaey">
+          <div className="hero-copy">
+            <span className="eyebrow">Radar de carreira</span>
+            <h2>Candidaturas melhores, com menos ruído.</h2>
+            <p>
+              Compare vagas, ajuste currículo e acompanhe cada envio em um fluxo feito para candidatos que querem decidir com segurança.
+            </p>
+            <div className="hero-actions">
+              <a className="hero-primary" href="#vagas">Ver vagas <ArrowRight /></a>
+              <a className="hero-secondary" href="#curriculo">Atualizar currículo</a>
+            </div>
+            <div className="trust-row" aria-label="Garantias do fluxo">
+              <span><ShieldCheck /> Revisão manual</span>
+              <span><LockKeyhole /> Dados privados</span>
+              <span><Gauge /> Match ajustável</span>
+            </div>
+          </div>
+
+          <div className="radar-panel" aria-hidden="true">
+            <div className="radar-grid" />
+            <div className="radar-orbit orbit-one" />
+            <div className="radar-orbit orbit-two" />
+            <div className="radar-orbit orbit-three" />
+            <span className="radar-node node-a" />
+            <span className="radar-node node-b" />
+            <span className="radar-node node-c" />
+            <div className="radar-center">
+              <Target />
+              <strong>{bestMatch}%</strong>
+              <span>melhor match</span>
+            </div>
+            <div className="floating-card match-card">
+              <span>Próxima ação</span>
+              <strong>{selectedJob.title}</strong>
+            </div>
+            <div className="floating-card privacy-card">
+              <ShieldCheck />
+              <span>Envio só com confirmação</span>
+            </div>
+          </div>
+        </section>
+
         {authNotice ? (
           <div className="auth-notice" role="status">
             {authNotice}
           </div>
         ) : null}
 
-        <section className="metrics" id="dashboard" aria-label="Resumo">
-          <Metric label="Vagas salvas" value={savedCount} tone="mint" />
-          <Metric label="Candidaturas ativas" value={activeCount} tone="blue" />
-          <Metric label="Entrevistas" value={interviewCount} tone="violet" />
-          <Metric label="Melhor match" value={`${bestMatch}%`} tone="amber" />
+        <section className="metrics" aria-label="Indicadores do candidato">
+          <Metric icon={<BriefcaseBusiness />} label="Vagas salvas" value={savedCount} tone="mint" />
+          <Metric icon={<Layers3 />} label="Candidaturas ativas" value={activeCount} tone="blue" />
+          <Metric icon={<Clock3 />} label="Entrevistas" value={interviewCount} tone="violet" />
+          <Metric icon={<Target />} label="Melhor match" value={`${bestMatch}%`} tone="amber" />
+        </section>
+
+        <section className="workflow-strip" aria-label="Como o Vitaey organiza candidaturas">
+          {workflow.map((item, index) => (
+            <article key={item.title}>
+              <span>{String(index + 1).padStart(2, "0")}</span>
+              <strong>{item.title}</strong>
+              <p>{item.copy}</p>
+            </article>
+          ))}
         </section>
 
         <section className="content-grid">
           <div className="panel job-panel" id="vagas">
             <div className="panel-heading">
               <div>
+                <span className="section-kicker">Busca priorizada</span>
                 <h2>Vagas recomendadas</h2>
-                <p>{filteredJobs.length} vagas filtradas - {activeFilters} filtros ativos.</p>
+                <p>{filteredJobs.length} vagas no radar · {activeFilters} filtros ativos.</p>
               </div>
               <Filter />
             </div>
@@ -405,7 +480,7 @@ function App() {
               <select value={workModel} onChange={(event) => setWorkModel(event.target.value as WorkModel | "all")}>
                 <option value="all">Todos os modelos</option>
                 <option value="remote">Remoto</option>
-                <option value="hybrid">Hibrido</option>
+                <option value="hybrid">Híbrido</option>
                 <option value="onsite">Presencial</option>
               </select>
               <select value={contract} onChange={(event) => setContract(event.target.value as Contract | "all")}>
@@ -413,23 +488,23 @@ function App() {
                 <option value="CLT">CLT</option>
                 <option value="PJ">PJ</option>
                 <option value="Contrato">Contrato</option>
-                <option value="Estagio">Estagio</option>
+                <option value="Estagio">Estágio</option>
               </select>
               <select value={seniority} onChange={(event) => setSeniority(event.target.value)}>
                 <option value="all">Todas as senioridades</option>
-                <option value="junior">Junior</option>
+                <option value="junior">Júnior</option>
                 <option value="pleno">Pleno</option>
-                <option value="senior">Senior</option>
+                <option value="senior">Sênior</option>
               </select>
               <select value={location} onChange={(event) => setLocation(event.target.value)}>
                 <option value="all">Todas as localidades</option>
                 <option value="remote">Remoto</option>
-                <option value="sao paulo">Sao Paulo</option>
+                <option value="sao paulo">São Paulo</option>
                 <option value="curitiba">Curitiba</option>
                 <option value="brasil">Brasil</option>
               </select>
               <label className="salary-field">
-                <span>Salario minimo</span>
+                <span>Salário mínimo</span>
                 <input
                   min="0"
                   step="1000"
@@ -448,18 +523,22 @@ function App() {
                   key={job.id}
                   onClick={() => setSelectedJob(job)}
                 >
-                  <div>
-                    <h3>{job.title}</h3>
-                    <p>{job.company} - {job.location}</p>
+                  <div className="job-title-row">
+                    <div>
+                      <span className="job-company">{job.company}</span>
+                      <h3>{job.title}</h3>
+                    </div>
+                    <div
+                      className="score-ring"
+                      style={{ "--score": job.score } as CSSProperties}
+                      aria-label={`Compatibilidade ${job.score}%`}
+                    >
+                      {job.score}%
+                    </div>
                   </div>
-                  <div
-                    className="score-ring"
-                    style={{ "--score": job.score } as CSSProperties}
-                    aria-label={`Compatibilidade ${job.score}%`}
-                  >
-                    {job.score}%
-                  </div>
+                  <p className="job-description">{job.description}</p>
                   <div className="job-meta">
+                    <span><MapPin /> {job.location}</span>
                     <span>{job.contract}</span>
                     <span>{job.seniority}</span>
                     <span>{job.posted}</span>
@@ -475,7 +554,7 @@ function App() {
               )) : (
                 <div className="empty-state">
                   <strong>Nenhuma vaga encontrada</strong>
-                  <span>Ajuste os filtros para ampliar o radar.</span>
+                  <span>Ajuste os filtros ou atualize o perfil para ampliar o radar.</span>
                 </div>
               )}
             </div>
@@ -489,13 +568,14 @@ function App() {
                 <strong>{selectedJob.score}%</strong>
               </div>
             </div>
+            <span className="section-kicker">Vaga selecionada</span>
             <h2>{selectedJob.title}</h2>
-            <p className="muted">{selectedJob.company} - {selectedJob.salary}</p>
+            <p className="muted">{selectedJob.company} · {selectedJob.salary}</p>
             <p>{selectedJob.description}</p>
             <SectionList title="Requisitos conectados" items={selectedJob.requirements} />
             <SectionList title="Pontos para revisar" items={selectedJob.gaps} subtle />
             <button className="wide-primary" onClick={() => void startApplication(selectedJob)}>
-              Personalizar e aplicar <ArrowRight />
+              Personalizar candidatura <ArrowRight />
             </button>
           </aside>
         </section>
@@ -504,10 +584,11 @@ function App() {
           <div className="profile-editor">
             <div className="panel-heading compact-heading">
               <div>
-                <h2>Perfil e curriculo</h2>
-                <p>{sessionEmail ? sessionEmail : "Entre para ativar persistencia privada."}</p>
+                <span className="section-kicker">Perfil do candidato</span>
+                <h2>Currículo e preferências</h2>
+                <p>{sessionEmail ? sessionEmail : "Entre para manter o perfil sincronizado com segurança."}</p>
               </div>
-              <FileText />
+              <UserRound />
             </div>
             <label>
               <span>Nome</span>
@@ -525,14 +606,14 @@ function App() {
               <label>
                 <span>Senioridade</span>
                 <select value={profileDraft.seniority} onChange={(event) => updateProfileDraft("seniority", event.target.value)}>
-                  <option>Junior</option>
+                  <option>Júnior</option>
                   <option>Pleno</option>
-                  <option>Senior</option>
+                  <option>Sênior</option>
                 </select>
               </label>
             </div>
             <label>
-              <span>Roles alvo</span>
+              <span>Funções alvo</span>
               <input
                 value={profileDraft.targetRoles.join(", ")}
                 onChange={(event) => updateProfileDraft("targetRoles", splitList(event.target.value))}
@@ -547,7 +628,7 @@ function App() {
             </label>
             <div className="profile-row">
               <label>
-                <span>Salario minimo</span>
+                <span>Salário mínimo</span>
                 <input
                   type="number"
                   min="0"
@@ -562,7 +643,7 @@ function App() {
                   checked={profileDraft.remoteFirst}
                   onChange={(event) => updateProfileDraft("remoteFirst", event.target.checked)}
                 />
-                <span>Remoto primeiro</span>
+                <span>Priorizar remoto</span>
               </label>
             </div>
             <div className="profile-actions">
@@ -570,26 +651,27 @@ function App() {
                 {profileSaving ? "Salvando..." : "Salvar perfil"}
               </button>
               <label className="upload-button">
+                <UploadCloud />
                 <input
                   type="file"
                   accept=".txt,.md,.pdf,.doc,.docx,text/plain,text/markdown,application/pdf"
                   onChange={(event) => void handleResumeUpload(event.target.files?.[0] ?? null)}
                 />
-                {resumeUploading ? "Enviando..." : "Enviar curriculo"}
+                {resumeUploading ? "Enviando..." : "Enviar currículo"}
               </label>
             </div>
           </div>
           <div className="document-preview">
-            <div>
-              <span>Resumo sugerido</span>
-              <strong>{profile.headline || "Atualize seu perfil para personalizar o ranking."}</strong>
+            <div className="preview-heading">
+              <span>Resumo para aplicação</span>
+              <strong>{profile.headline || "Atualize o perfil para personalizar o ranking."}</strong>
             </div>
             <div className="skill-cloud">
               {profile.skills.slice(0, 12).map((item) => <span key={item}>{item}</span>)}
             </div>
             <ul>
               {selectedJob.requirements.slice(0, 4).map((item) => (
-                <li key={item}>Adaptar experiencia para destacar {item}.</li>
+                <li key={item}>Destacar experiência relacionada a {item}.</li>
               ))}
             </ul>
             <div className="resume-list">
@@ -608,8 +690,9 @@ function App() {
         <section className="panel kanban" id="kanban">
           <div className="panel-heading">
             <div>
+              <span className="section-kicker">Rastreamento</span>
               <h2>Pipeline de candidaturas</h2>
-              <p>Atualize o status sem perder historico de cada vaga.</p>
+              <p>{pipelineProgress}% das candidaturas já saíram da etapa inicial.</p>
             </div>
             <Hand />
           </div>
@@ -638,8 +721,9 @@ function App() {
           <section className="apply-modal" role="dialog" aria-modal="true" aria-labelledby="apply-title" onMouseDown={(event) => event.stopPropagation()}>
             <div className="panel-heading">
               <div>
+                <span className="section-kicker">Confirmação final</span>
                 <h2 id="apply-title">Aplicar para {applyJob.title}</h2>
-                <p>Revise cada item. O envio so libera com confirmacao manual.</p>
+                <p>Revise cada item. O envio só libera com confirmação manual.</p>
               </div>
               <ShieldCheck />
             </div>
@@ -651,7 +735,7 @@ function App() {
               </label>
             ))}
             <div className="notice">
-              Vitaey nao envia candidaturas em massa. Esta acao representa uma candidatura revisada e iniciada por voce.
+              Vitaey não envia candidaturas em massa. Esta ação representa uma candidatura revisada e iniciada por você.
             </div>
             <div className="modal-actions">
               <button onClick={() => setApplyJob(null)}>Cancelar</button>
@@ -666,9 +750,10 @@ function App() {
   );
 }
 
-function Metric({ label, value, tone }: { label: string; value: string | number; tone: string }) {
+function Metric({ label, value, tone, icon }: { label: string; value: string | number; tone: string; icon: ReactNode }) {
   return (
     <article className={`metric ${tone}`}>
+      <div>{icon}</div>
       <span>{label}</span>
       <strong>{value}</strong>
     </article>
@@ -679,7 +764,7 @@ function SectionList({ title, items, subtle = false }: { title: string; items: s
   return (
     <div className={subtle ? "section-list subtle" : "section-list"}>
       <h3>{title}</h3>
-      <div>{items.map((item) => <span key={item}>{item}</span>)}</div>
+      <div>{items.length ? items.map((item) => <span key={item}>{item}</span>) : <span>Nenhum ponto crítico agora</span>}</div>
     </div>
   );
 }
@@ -687,8 +772,8 @@ function SectionList({ title, items, subtle = false }: { title: string; items: s
 function reviewLabel(item: string) {
   const labels: Record<string, string> = {
     profile: "Dados pessoais e contato revisados",
-    resume: "Curriculo e carta adaptados para esta vaga",
-    answers: "Perguntas obrigatorias preenchidas",
+    resume: "Currículo e carta adaptados para esta vaga",
+    answers: "Perguntas obrigatórias preenchidas",
     compliance: "Confirmo que quero iniciar esta candidatura",
   };
   return labels[item];
@@ -697,7 +782,7 @@ function reviewLabel(item: string) {
 function modelLabel(model: WorkModel) {
   const labels: Record<WorkModel, string> = {
     remote: "Remoto",
-    hybrid: "Hibrido",
+    hybrid: "Híbrido",
     onsite: "Presencial",
   };
   return labels[model];

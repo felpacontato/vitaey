@@ -2,6 +2,7 @@ node_modules/
 dist/
 test-results/
 playwright-report/
+.vercel/
 *.log
 *.tsbuildinfo
 .venv/
@@ -12,3 +13,5 @@ __pycache__/
 .env
 .env.local
 *.pyc
+
+.vercel

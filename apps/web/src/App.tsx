@@ -793,7 +793,7 @@ function statusLabel(status: "connecting" | "live" | "offline" | "supabase") {
     connecting: "Conectando",
     live: "API ativa",
     offline: "Modo local",
-    supabase: "Supabase ativo",
+    supabase: "Conta sincronizada",
   };
   return labels[status];
 }

@@ -995,14 +995,16 @@ p {
 
 .toggle-row {
   min-height: 44px;
-  grid-template-columns: 24px minmax(0, 1fr);
+  grid-template-columns: 38px minmax(0, 1fr);
   align-content: end;
   align-items: center;
 }
 
 .toggle-row input {
   width: 36px;
+  height: 36px;
   min-height: 36px;
+  margin: 0;
   accent-color: #0d5b46;
 }
 

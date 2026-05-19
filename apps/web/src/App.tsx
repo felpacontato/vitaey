@@ -15,13 +15,31 @@ import {
 } from "lucide-react";
 import {
   confirmApplicationSubmission,
+  fetchApplicationAudit,
   fetchApplications,
+  fetchCandidateProfile,
   fetchRecommendedJobs,
+  fetchResumes,
   prepareApplication,
   saveApplication,
+  updateApplicationStage,
+  uploadResume,
+  upsertCandidateProfile,
 } from "./api";
 import { getCurrentSession, hasSupabaseConfig, onAuthStateChange, signInWithGoogle, signOut } from "./supabase";
-import { initialApplications, jobs as fallbackJobs, type Application, type Contract, type Job, type Stage, type WorkModel } from "./data/mock";
+import {
+  defaultProfile,
+  initialApplications,
+  jobs as fallbackJobs,
+  type Application,
+  type ApplicationAudit,
+  type CandidateProfile,
+  type Contract,
+  type Job,
+  type ResumeRecord,
+  type Stage,
+  type WorkModel,
+} from "./data/mock";
 
 const stages: Array<{ id: Stage; label: string }> = [
   { id: "saved", label: "Salvas" },
@@ -47,6 +65,12 @@ function App() {
   const [apiStatus, setApiStatus] = useState<"connecting" | "live" | "offline" | "supabase">("connecting");
   const [sessionEmail, setSessionEmail] = useState<string | null>(null);
   const [authNotice, setAuthNotice] = useState("");
+  const [profile, setProfile] = useState<CandidateProfile>(defaultProfile);
+  const [profileDraft, setProfileDraft] = useState<CandidateProfile>(defaultProfile);
+  const [resumes, setResumes] = useState<ResumeRecord[]>([]);
+  const [audit, setAudit] = useState<ApplicationAudit[]>([]);
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [resumeUploading, setResumeUploading] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -69,14 +93,23 @@ function App() {
 
     async function refreshData() {
       try {
-        const [recommendedJobs, serverApplications] = await Promise.all([
+        const [recommendedJobs, serverApplications, storedProfile, storedResumes, auditRows] = await Promise.all([
           fetchRecommendedJobs(),
           hasSupabaseConfig && !sessionEmail ? Promise.resolve([]) : fetchApplications(),
+          hasSupabaseConfig && !sessionEmail ? Promise.resolve(null) : fetchCandidateProfile(),
+          hasSupabaseConfig && !sessionEmail ? Promise.resolve([]) : fetchResumes(),
+          hasSupabaseConfig && !sessionEmail ? Promise.resolve([]) : fetchApplicationAudit(),
         ]);
         if (!isMounted) return;
-        setJobs(recommendedJobs);
-        setSelectedJob(recommendedJobs[0] ?? fallbackJobs[0]);
+        const nextProfile = storedProfile ?? defaultProfile;
+        const personalized = personalizeJobs(recommendedJobs, nextProfile);
+        setProfile(nextProfile);
+        setProfileDraft(nextProfile);
+        setJobs(personalized);
+        setSelectedJob(personalized[0] ?? fallbackJobs[0]);
         setApplications(serverApplications);
+        setResumes(storedResumes);
+        setAudit(auditRows);
         setApiStatus(hasSupabaseConfig ? "supabase" : "live");
       } catch {
         if (!isMounted) return;
@@ -84,12 +117,18 @@ function App() {
       }
     }
 
-    Promise.all([fetchRecommendedJobs(), fetchApplications()])
-      .then(([recommendedJobs, serverApplications]) => {
+    Promise.all([fetchRecommendedJobs(), fetchApplications(), fetchCandidateProfile(), fetchResumes(), fetchApplicationAudit()])
+      .then(([recommendedJobs, serverApplications, storedProfile, storedResumes, auditRows]) => {
         if (!isMounted) return;
-        setJobs(recommendedJobs);
-        setSelectedJob(recommendedJobs[0] ?? fallbackJobs[0]);
+        const nextProfile = storedProfile ?? defaultProfile;
+        const personalized = personalizeJobs(recommendedJobs, nextProfile);
+        setProfile(nextProfile);
+        setProfileDraft(nextProfile);
+        setJobs(personalized);
+        setSelectedJob(personalized[0] ?? fallbackJobs[0]);
         setApplications(serverApplications);
+        setResumes(storedResumes);
+        setAudit(auditRows);
         setApiStatus(hasSupabaseConfig ? "supabase" : "live");
       })
       .catch(() => {
@@ -218,12 +257,70 @@ function App() {
   const bestMatch = jobs.length ? Math.max(...jobs.map((job) => job.score)) : 0;
   const activeFilters = [workModel, contract, seniority, location].filter((item) => item !== "all").length + (minSalary ? 1 : 0);
 
-  function moveApplication(id: string, stage: Stage) {
+  async function moveApplication(id: string, stage: Stage) {
+    const current = applications.find((item) => item.id === id);
+    if (!current) return;
     setApplications((items) => items.map((item) => (item.id === id ? { ...item, stage } : item)));
+    try {
+      const updated = await updateApplicationStage(current, stage);
+      upsertApplication(updated);
+    } catch {
+      setApiStatus("offline");
+    }
   }
 
   function toggleReviewed(key: string) {
     setReviewed((items) => (items.includes(key) ? items.filter((item) => item !== key) : [...items, key]));
+  }
+
+  function updateProfileDraft<K extends keyof CandidateProfile>(key: K, value: CandidateProfile[K]) {
+    setProfileDraft((item) => ({ ...item, [key]: value }));
+  }
+
+  async function saveProfile() {
+    if (hasSupabaseConfig && !sessionEmail) {
+      setAuthNotice("Entre com Google para salvar seu perfil.");
+      return;
+    }
+    setProfileSaving(true);
+    try {
+      const saved = await upsertCandidateProfile(profileDraft);
+      const personalized = personalizeJobs(jobs, saved);
+      setProfile(saved);
+      setProfileDraft(saved);
+      setJobs(personalized);
+      setSelectedJob(personalized[0] ?? selectedJob);
+      setApiStatus(hasSupabaseConfig ? "supabase" : "live");
+    } catch {
+      setAuthNotice("Nao foi possivel salvar o perfil agora.");
+      setApiStatus("offline");
+    } finally {
+      setProfileSaving(false);
+    }
+  }
+
+  async function handleResumeUpload(file: File | null) {
+    if (!file) return;
+    if (hasSupabaseConfig && !sessionEmail) {
+      setAuthNotice("Entre com Google para enviar curriculo.");
+      return;
+    }
+    setResumeUploading(true);
+    try {
+      const result = await uploadResume(file, profile);
+      const personalized = personalizeJobs(jobs, result.profile);
+      setProfile(result.profile);
+      setProfileDraft(result.profile);
+      setResumes((items) => [result.resume, ...items.filter((item) => item.id !== result.resume.id)]);
+      setJobs(personalized);
+      setSelectedJob(personalized[0] ?? selectedJob);
+      setApiStatus("supabase");
+    } catch {
+      setAuthNotice("Nao foi possivel processar o curriculo agora.");
+      setApiStatus("offline");
+    } finally {
+      setResumeUploading(false);
+    }
   }
 
   return (
@@ -403,21 +500,108 @@ function App() {
           </aside>
         </section>
 
-        <section className="panel builder" id="curriculo">
-          <div>
-            <h2>Construtor assistido</h2>
-            <p>O Vitaey sugere bullets e carta com base na vaga selecionada. Voce edita antes de usar.</p>
+        <section className="panel builder profile-workbench" id="curriculo">
+          <div className="profile-editor">
+            <div className="panel-heading compact-heading">
+              <div>
+                <h2>Perfil e curriculo</h2>
+                <p>{sessionEmail ? sessionEmail : "Entre para ativar persistencia privada."}</p>
+              </div>
+              <FileText />
+            </div>
+            <label>
+              <span>Nome</span>
+              <input value={profileDraft.fullName} onChange={(event) => updateProfileDraft("fullName", event.target.value)} />
+            </label>
+            <label>
+              <span>Headline</span>
+              <input value={profileDraft.headline} onChange={(event) => updateProfileDraft("headline", event.target.value)} />
+            </label>
+            <div className="profile-row">
+              <label>
+                <span>Localidade</span>
+                <input value={profileDraft.location} onChange={(event) => updateProfileDraft("location", event.target.value)} />
+              </label>
+              <label>
+                <span>Senioridade</span>
+                <select value={profileDraft.seniority} onChange={(event) => updateProfileDraft("seniority", event.target.value)}>
+                  <option>Junior</option>
+                  <option>Pleno</option>
+                  <option>Senior</option>
+                </select>
+              </label>
+            </div>
+            <label>
+              <span>Roles alvo</span>
+              <input
+                value={profileDraft.targetRoles.join(", ")}
+                onChange={(event) => updateProfileDraft("targetRoles", splitList(event.target.value))}
+              />
+            </label>
+            <label>
+              <span>Skills</span>
+              <textarea
+                value={profileDraft.skills.join(", ")}
+                onChange={(event) => updateProfileDraft("skills", splitList(event.target.value))}
+              />
+            </label>
+            <div className="profile-row">
+              <label>
+                <span>Salario minimo</span>
+                <input
+                  type="number"
+                  min="0"
+                  step="1000"
+                  value={profileDraft.salaryMin ?? ""}
+                  onChange={(event) => updateProfileDraft("salaryMin", Number(event.target.value) || null)}
+                />
+              </label>
+              <label className="toggle-row">
+                <input
+                  type="checkbox"
+                  checked={profileDraft.remoteFirst}
+                  onChange={(event) => updateProfileDraft("remoteFirst", event.target.checked)}
+                />
+                <span>Remoto primeiro</span>
+              </label>
+            </div>
+            <div className="profile-actions">
+              <button className="primary" disabled={profileSaving} onClick={() => void saveProfile()}>
+                {profileSaving ? "Salvando..." : "Salvar perfil"}
+              </button>
+              <label className="upload-button">
+                <input
+                  type="file"
+                  accept=".txt,.md,.pdf,.doc,.docx,text/plain,text/markdown,application/pdf"
+                  onChange={(event) => void handleResumeUpload(event.target.files?.[0] ?? null)}
+                />
+                {resumeUploading ? "Enviando..." : "Enviar curriculo"}
+              </label>
+            </div>
           </div>
           <div className="document-preview">
             <div>
               <span>Resumo sugerido</span>
-              <strong>Designer de produto com experiencia em discovery, design system e SaaS.</strong>
+              <strong>{profile.headline || "Atualize seu perfil para personalizar o ranking."}</strong>
+            </div>
+            <div className="skill-cloud">
+              {profile.skills.slice(0, 12).map((item) => <span key={item}>{item}</span>)}
             </div>
             <ul>
               {selectedJob.requirements.slice(0, 4).map((item) => (
                 <li key={item}>Adaptar experiencia para destacar {item}.</li>
               ))}
             </ul>
+            <div className="resume-list">
+              {resumes.slice(0, 3).map((resume) => (
+                <span key={resume.id}>{resume.fileName}</span>
+              ))}
+            </div>
+            <div className="audit-list">
+              {audit.slice(0, 3).map((item) => (
+                <span key={item.id}>{auditLabel(item.eventType)}</span>
+              ))}
+            </div>
           </div>
         </section>
 
@@ -438,7 +622,7 @@ function App() {
                     <strong>{item.title}</strong>
                     <span>{item.company}</span>
                     <div className="tag-row">{item.tags.map((tag) => <small key={tag}>{tag}</small>)}</div>
-                    <select value={item.stage} onChange={(event) => moveApplication(item.id, event.target.value as Stage)}>
+                    <select value={item.stage} onChange={(event) => void moveApplication(item.id, event.target.value as Stage)}>
                       {stages.map((option) => <option value={option.id} key={option.id}>{option.label}</option>)}
                     </select>
                   </article>
@@ -527,6 +711,47 @@ function statusLabel(status: "connecting" | "live" | "offline" | "supabase") {
     supabase: "Supabase ativo",
   };
   return labels[status];
+}
+
+function splitList(value: string): string[] {
+  return value
+    .split(",")
+    .map((item) => item.trim().toLowerCase())
+    .filter(Boolean);
+}
+
+function auditLabel(eventType: string) {
+  const labels: Record<string, string> = {
+    user_confirmed_application: "Candidatura confirmada",
+  };
+  return labels[eventType] ?? eventType;
+}
+
+function personalizeJobs(sourceJobs: Job[], profile: CandidateProfile): Job[] {
+  const profileSkills = new Set(profile.skills.map((item) => item.toLowerCase()));
+  const targetRoles = profile.targetRoles.map((item) => item.toLowerCase());
+  const location = profile.location.toLowerCase();
+
+  return sourceJobs
+    .map((job) => {
+      const jobSkills = job.requirements.map((item) => item.toLowerCase());
+      const skillHits = jobSkills.filter((item) => profileSkills.has(item)).length;
+      const roleHit = targetRoles.some((role) => job.title.toLowerCase().includes(role));
+      const remoteHit = profile.remoteFirst && job.workModel === "remote";
+      const locationHit = location && job.location.toLowerCase().includes(location.split(",")[0]);
+      const salaryPenalty = profile.salaryMin && job.salaryMax && job.salaryMax < profile.salaryMin ? -14 : 0;
+      const personalizedScore = Math.max(
+        1,
+        Math.min(99, job.score + skillHits * 4 + (roleHit ? 6 : 0) + (remoteHit ? 3 : 0) + (locationHit ? 2 : 0) + salaryPenalty),
+      );
+
+      return {
+        ...job,
+        score: personalizedScore,
+        gaps: jobSkills.filter((item) => !profileSkills.has(item)).slice(0, 3),
+      };
+    })
+    .sort((a, b) => b.score - a.score);
 }
 
 export default App;

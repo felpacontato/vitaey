@@ -32,6 +32,46 @@ export type Application = {
   sentAt?: string;
 };
 
+export type CandidateProfile = {
+  fullName: string;
+  headline: string;
+  location: string;
+  seniority: string;
+  targetRoles: string[];
+  skills: string[];
+  languages: string[];
+  salaryMin: number | null;
+  remoteFirst: boolean;
+};
+
+export type ResumeRecord = {
+  id: string;
+  fileName: string;
+  extractedSkills: string[];
+  createdAt: string;
+};
+
+export type ApplicationAudit = {
+  id: string;
+  applicationId: string;
+  eventType: string;
+  reviewedFields: string[];
+  message?: string;
+  createdAt: string;
+};
+
+export const defaultProfile: CandidateProfile = {
+  fullName: "",
+  headline: "Product Designer com experiencia em SaaS B2B",
+  location: "Sao Paulo, SP",
+  seniority: "Pleno",
+  targetRoles: ["Product Designer", "UX Designer", "Product Manager"],
+  skills: ["ux research", "figma", "design system", "analytics", "saas", "prototipacao"],
+  languages: ["pt-BR", "en"],
+  salaryMin: 8500,
+  remoteFirst: true,
+};
+
 export const jobs: Job[] = [
   {
     id: "job_001",

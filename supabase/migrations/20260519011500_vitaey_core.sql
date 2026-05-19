@@ -55,29 +55,29 @@ create policy "Users can read their Vitaey applications"
 on public.vitaey_applications
 for select
 to authenticated
-using (auth.uid() = user_id);
+using ((select auth.uid()) is not null and (select auth.uid()) = user_id);
 
 drop policy if exists "Users can create their Vitaey applications" on public.vitaey_applications;
 create policy "Users can create their Vitaey applications"
 on public.vitaey_applications
 for insert
 to authenticated
-with check (auth.uid() = user_id);
+with check ((select auth.uid()) is not null and (select auth.uid()) = user_id);
 
 drop policy if exists "Users can update their Vitaey applications" on public.vitaey_applications;
 create policy "Users can update their Vitaey applications"
 on public.vitaey_applications
 for update
 to authenticated
-using (auth.uid() = user_id)
-with check (auth.uid() = user_id);
+using ((select auth.uid()) is not null and (select auth.uid()) = user_id)
+with check ((select auth.uid()) is not null and (select auth.uid()) = user_id);
 
 drop policy if exists "Users can delete their Vitaey applications" on public.vitaey_applications;
 create policy "Users can delete their Vitaey applications"
 on public.vitaey_applications
 for delete
 to authenticated
-using (auth.uid() = user_id);
+using ((select auth.uid()) is not null and (select auth.uid()) = user_id);
 
 insert into public.vitaey_jobs (
   id,

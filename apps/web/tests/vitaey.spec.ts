@@ -9,7 +9,8 @@ test("filters jobs and completes a reviewed application", async ({ page }, testI
   });
 
   await page.goto("/", { waitUntil: "domcontentloaded" });
-  await expect(page.locator("h1")).toContainText("Radar de oportunidades");
+  await expect(page.locator("h1")).toContainText("Vitaey");
+  await expect(page.getByRole("heading", { name: "Candidaturas melhores, com menos ruído." })).toBeVisible();
   await expect(page.locator(".api-pill")).toContainText(/API ativa|Modo local|Conectando|Supabase ativo/);
 
   const hasHorizontalOverflow = await page.evaluate(

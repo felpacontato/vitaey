@@ -6,8 +6,8 @@
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   --ink: #111916;
-  --ink-soft: #4f5f59;
-  --muted: #74817c;
+  --ink-soft: #3f5049;
+  --muted: #566761;
   --line: rgba(17, 25, 22, 0.1);
   --panel: rgba(255, 255, 250, 0.92);
   --deep: #071c16;
@@ -96,6 +96,7 @@ p {
     linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
     linear-gradient(165deg, #061a14, #0c2f26 58%, #061a14);
+  background-color: #061a14;
   background-size: 30px 30px, 30px 30px, auto;
   color: #f5fff9;
 }
@@ -410,6 +411,7 @@ p {
     radial-gradient(circle at 50% 50%, rgba(120, 240, 181, 0.35), transparent 8rem),
     radial-gradient(circle at 78% 22%, rgba(155, 189, 255, 0.28), transparent 12rem),
     linear-gradient(145deg, #071c16, #0d3028 54%, #081510);
+  background-color: #071c16;
 }
 
 .radar-grid {
@@ -490,7 +492,7 @@ p {
   padding: 16px;
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(7, 28, 22, 0.78);
   color: #ffffff;
   text-align: center;
   transform: translate(-50%, -50%);
@@ -515,7 +517,7 @@ p {
 }
 
 .radar-center span {
-  color: rgba(255, 255, 255, 0.68);
+  color: #dceee7;
   font-size: 0.72rem;
   font-weight: 800;
 }
@@ -525,7 +527,7 @@ p {
   padding: 14px;
   border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: var(--radius);
-  background: rgba(255, 255, 250, 0.1);
+  background: rgba(7, 28, 22, 0.76);
   color: #ffffff;
   backdrop-filter: blur(16px);
   box-shadow: 0 24px 70px rgba(0, 0, 0, 0.2);
@@ -537,7 +539,7 @@ p {
 }
 
 .floating-card span {
-  color: rgba(255, 255, 255, 0.68);
+  color: #dceee7;
   font-size: 0.76rem;
   font-weight: 800;
 }
@@ -608,6 +610,7 @@ p {
 .metric span {
   color: var(--muted);
   font-size: 0.9rem;
+  font-weight: 760;
 }
 
 .metric strong {
@@ -848,7 +851,7 @@ p {
   padding: 5px 9px;
   border-radius: 999px;
   background: rgba(13, 91, 70, 0.08);
-  color: #315249;
+  color: #24483f;
   font-size: 0.8rem;
   font-weight: 800;
 }
@@ -877,6 +880,7 @@ p {
     radial-gradient(circle at 34% 22%, rgba(120, 240, 181, 0.96), transparent 28%),
     radial-gradient(circle at 86% 20%, rgba(155, 189, 255, 0.35), transparent 22%),
     linear-gradient(135deg, #09231b, #195449);
+  background-color: #09231b;
   color: #ffffff;
 }
 
@@ -1041,6 +1045,12 @@ p {
 .document-preview span {
   color: var(--muted);
   font-size: 0.86rem;
+}
+
+.document-preview .skill-cloud span {
+  color: #24483f;
+  background: rgba(13, 91, 70, 0.12);
+  font-weight: 800;
 }
 
 .preview-heading strong {

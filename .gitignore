@@ -2,6 +2,8 @@ node_modules/
 dist/
 test-results/
 playwright-report/
+output/
+apps/web/output/
 .vercel/
 *.log
 *.tsbuildinfo

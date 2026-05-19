@@ -7,7 +7,7 @@ import type {
   ResumeRecord,
   Stage,
   WorkModel,
-} from "./data/mock";
+} from "./data/model";
 import { hasSupabaseConfig, supabase } from "./supabase";
 
 const API_BASE_URL = resolveApiBaseUrl();

@@ -36,8 +36,6 @@ import {
 import { getCurrentSession, hasSupabaseConfig, onAuthStateChange, signInWithGoogle, signOut } from "./supabase";
 import {
   defaultProfile,
-  initialApplications,
-  jobs as fallbackJobs,
   type Application,
   type ApplicationAudit,
   type CandidateProfile,
@@ -46,7 +44,7 @@ import {
   type ResumeRecord,
   type Stage,
   type WorkModel,
-} from "./data/mock";
+} from "./data/model";
 
 const stages: Array<{ id: Stage; label: string }> = [
   { id: "saved", label: "Salvas" },
@@ -78,9 +76,9 @@ function App() {
   const [seniority, setSeniority] = useState("all");
   const [location, setLocation] = useState("all");
   const [minSalary, setMinSalary] = useState(0);
-  const [jobs, setJobs] = useState<Job[]>(fallbackJobs);
-  const [selectedJob, setSelectedJob] = useState<Job>(fallbackJobs[0]);
-  const [applications, setApplications] = useState<Application[]>(initialApplications);
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [selectedJob, setSelectedJob] = useState<Job | null>(null);
+  const [applications, setApplications] = useState<Application[]>([]);
   const [applyJob, setApplyJob] = useState<Job | null>(null);
   const [reviewed, setReviewed] = useState<string[]>(["profile"]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -128,7 +126,7 @@ function App() {
         setProfile(nextProfile);
         setProfileDraft(nextProfile);
         setJobs(personalized);
-        setSelectedJob(personalized[0] ?? fallbackJobs[0]);
+        setSelectedJob(personalized[0] ?? null);
         setApplications(serverApplications);
         setResumes(storedResumes);
         setAudit(auditRows);
@@ -147,7 +145,7 @@ function App() {
         setProfile(nextProfile);
         setProfileDraft(nextProfile);
         setJobs(personalized);
-        setSelectedJob(personalized[0] ?? fallbackJobs[0]);
+        setSelectedJob(personalized[0] ?? null);
         setApplications(serverApplications);
         setResumes(storedResumes);
         setAudit(auditRows);
@@ -165,10 +163,13 @@ function App() {
   }, [sessionEmail]);
 
   useEffect(() => {
-    if (!jobs.some((job) => job.id === selectedJob.id)) {
-      setSelectedJob(jobs[0] ?? fallbackJobs[0]);
+    if (selectedJob && !jobs.some((job) => job.id === selectedJob.id)) {
+      setSelectedJob(jobs[0] ?? null);
     }
-  }, [jobs, selectedJob.id]);
+    if (!selectedJob && jobs.length) {
+      setSelectedJob(jobs[0]);
+    }
+  }, [jobs, selectedJob?.id]);
 
   const filteredJobs = useMemo(() => {
     return jobs.filter((job) => {
@@ -191,6 +192,7 @@ function App() {
   const bestMatch = jobs.length ? Math.max(...jobs.map((job) => job.score)) : 0;
   const activeFilters = [workModel, contract, seniority, location].filter((item) => item !== "all").length + (minSalary ? 1 : 0);
   const pipelineProgress = applications.length ? Math.round((applications.filter((item) => item.stage !== "saved").length / applications.length) * 100) : 0;
+  const selectedRequirements = selectedJob?.requirements.slice(0, 4) ?? [];
 
   function upsertApplication(application: Application) {
     setApplications((items) => [
@@ -311,7 +313,7 @@ function App() {
       setProfile(saved);
       setProfileDraft(saved);
       setJobs(personalized);
-      setSelectedJob(personalized[0] ?? selectedJob);
+      setSelectedJob(personalized[0] ?? selectedJob ?? null);
       setApiStatus(hasSupabaseConfig ? "supabase" : "live");
     } catch {
       setAuthNotice("Não foi possível salvar o perfil agora.");
@@ -335,7 +337,7 @@ function App() {
       setProfileDraft(result.profile);
       setResumes((items) => [result.resume, ...items.filter((item) => item.id !== result.resume.id)]);
       setJobs(personalized);
-      setSelectedJob(personalized[0] ?? selectedJob);
+      setSelectedJob(personalized[0] ?? selectedJob ?? null);
       setApiStatus("supabase");
     } catch {
       setAuthNotice("Não foi possível processar o currículo agora.");
@@ -421,12 +423,12 @@ function App() {
             <span className="radar-node node-c" />
             <div className="radar-center">
               <Target />
-              <strong>{bestMatch}%</strong>
-              <span>melhor match</span>
+              <strong>{bestMatch ? `${bestMatch}%` : "Sem vagas"}</strong>
+              <span>{bestMatch ? "melhor match" : "fonte pendente"}</span>
             </div>
             <div className="floating-card match-card">
               <span>Próxima ação</span>
-              <strong>{selectedJob.title}</strong>
+              <strong>{selectedJob?.title ?? "Conectar oportunidades"}</strong>
             </div>
             <div className="floating-card privacy-card">
               <ShieldCheck />
@@ -445,7 +447,7 @@ function App() {
           <Metric icon={<BriefcaseBusiness />} label="Vagas salvas" value={savedCount} tone="mint" />
           <Metric icon={<Layers3 />} label="Candidaturas ativas" value={activeCount} tone="blue" />
           <Metric icon={<Clock3 />} label="Entrevistas" value={interviewCount} tone="violet" />
-          <Metric icon={<Target />} label="Melhor match" value={`${bestMatch}%`} tone="amber" />
+          <Metric icon={<Target />} label="Melhor match" value={bestMatch ? `${bestMatch}%` : "Sem dados"} tone="amber" />
         </section>
 
         <section className="workflow-strip" aria-label="Como o Vitaey organiza candidaturas">
@@ -464,7 +466,11 @@ function App() {
               <div>
                 <span className="section-kicker">Busca priorizada</span>
                 <h2>Vagas recomendadas</h2>
-                <p>{filteredJobs.length} vagas no radar · {activeFilters} filtros ativos.</p>
+                <p>
+                  {jobs.length
+                    ? `${filteredJobs.length} vagas no radar · ${activeFilters} filtros ativos.`
+                    : "As vagas aparecem quando houver uma fonte de oportunidades conectada."}
+                </p>
               </div>
               <Filter />
             </div>
@@ -519,7 +525,7 @@ function App() {
             <div className="job-list">
               {filteredJobs.length ? filteredJobs.map((job) => (
                 <article
-                  className={`job-card ${selectedJob.id === job.id ? "selected" : ""}`}
+                  className={`job-card ${selectedJob?.id === job.id ? "selected" : ""}`}
                   key={job.id}
                   onClick={() => setSelectedJob(job)}
                 >
@@ -553,30 +559,43 @@ function App() {
                 </article>
               )) : (
                 <div className="empty-state">
-                  <strong>Nenhuma vaga encontrada</strong>
-                  <span>Ajuste os filtros ou atualize o perfil para ampliar o radar.</span>
+                  <strong>{jobs.length ? "Nenhuma vaga encontrada" : "Nenhuma vaga disponível"}</strong>
+                  <span>
+                    {jobs.length
+                      ? "Ajuste os filtros ou atualize o perfil para ampliar o radar."
+                      : "As oportunidades reais aparecerão aqui quando a fonte estiver conectada."}
+                  </span>
                 </div>
               )}
             </div>
           </div>
 
           <aside className="panel details-panel">
-            <div className="company-visual">
-              <div className="orbit"><Sparkles /></div>
-              <div>
-                <span>Compatibilidade</span>
-                <strong>{selectedJob.score}%</strong>
+            {selectedJob ? (
+              <>
+                <div className="company-visual">
+                  <div className="orbit"><Sparkles /></div>
+                  <div>
+                    <span>Compatibilidade</span>
+                    <strong>{selectedJob.score}%</strong>
+                  </div>
+                </div>
+                <span className="section-kicker">Vaga selecionada</span>
+                <h2>{selectedJob.title}</h2>
+                <p className="muted">{selectedJob.company} · {selectedJob.salary}</p>
+                <p>{selectedJob.description}</p>
+                <SectionList title="Requisitos conectados" items={selectedJob.requirements} />
+                <SectionList title="Pontos para revisar" items={selectedJob.gaps} subtle />
+                <button className="wide-primary" onClick={() => void startApplication(selectedJob)}>
+                  Personalizar candidatura <ArrowRight />
+                </button>
+              </>
+            ) : (
+              <div className="empty-state detail-empty">
+                <strong>Nenhuma vaga selecionada</strong>
+                <span>Conecte uma fonte de oportunidades ou aguarde novas vagas para revisar compatibilidade.</span>
               </div>
-            </div>
-            <span className="section-kicker">Vaga selecionada</span>
-            <h2>{selectedJob.title}</h2>
-            <p className="muted">{selectedJob.company} · {selectedJob.salary}</p>
-            <p>{selectedJob.description}</p>
-            <SectionList title="Requisitos conectados" items={selectedJob.requirements} />
-            <SectionList title="Pontos para revisar" items={selectedJob.gaps} subtle />
-            <button className="wide-primary" onClick={() => void startApplication(selectedJob)}>
-              Personalizar candidatura <ArrowRight />
-            </button>
+            )}
           </aside>
         </section>
 
@@ -670,9 +689,13 @@ function App() {
               {profile.skills.slice(0, 12).map((item) => <span key={item}>{item}</span>)}
             </div>
             <ul>
-              {selectedJob.requirements.slice(0, 4).map((item) => (
-                <li key={item}>Destacar experiência relacionada a {item}.</li>
-              ))}
+              {selectedRequirements.length ? (
+                selectedRequirements.map((item) => (
+                  <li key={item}>Destacar experiência relacionada a {item}.</li>
+                ))
+              ) : (
+                <li>Salve uma vaga real para gerar recomendações de destaque.</li>
+              )}
             </ul>
             <div className="resume-list">
               {resumes.slice(0, 3).map((resume) => (
@@ -692,7 +715,11 @@ function App() {
             <div>
               <span className="section-kicker">Rastreamento</span>
               <h2>Pipeline de candidaturas</h2>
-              <p>{pipelineProgress}% das candidaturas já saíram da etapa inicial.</p>
+              <p>
+                {applications.length
+                  ? `${pipelineProgress}% das candidaturas já saíram da etapa inicial.`
+                  : "As etapas aparecem quando você salvar ou iniciar uma candidatura."}
+              </p>
             </div>
             <Hand />
           </div>
@@ -792,7 +819,7 @@ function statusLabel(status: "connecting" | "live" | "offline" | "supabase") {
   const labels = {
     connecting: "Conectando",
     live: "API ativa",
-    offline: "Modo local",
+    offline: "Fonte indisponível",
     supabase: "Conta sincronizada",
   };
   return labels[status];

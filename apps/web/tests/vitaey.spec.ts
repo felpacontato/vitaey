@@ -19,6 +19,13 @@ test("filters jobs and completes a reviewed application", async ({ page }, testI
   );
   expect(hasHorizontalOverflow).toBeFalsy();
 
+  await page.getByRole("button", { name: "Ver lembretes" }).click();
+  await expect(page.locator(".auth-notice")).toContainText("Nenhum lembrete pendente agora.");
+  await page.getByRole("link", { name: /Ver vagas/ }).click();
+  await expect(page).toHaveURL(/#vagas$/);
+  await page.getByRole("link", { name: /Atualizar currículo/ }).click();
+  await expect(page).toHaveURL(/#curriculo$/);
+
   const status = await apiPill.textContent();
   if (status?.includes("Fonte indisponível")) {
     await expect(page.locator(".job-list")).toContainText("Nenhuma vaga disponível");

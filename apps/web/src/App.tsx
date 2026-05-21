@@ -375,6 +375,7 @@ function App() {
           <div>
             <span className="eyebrow">Workspace pessoal</span>
             <h1>Vitaey</h1>
+            <p className="topbar-copy">Organize currículo, vagas e candidaturas em um só lugar.</p>
           </div>
           <div className="status-cluster">
             <span className={`api-pill ${apiStatus}`}>{statusLabel(apiStatus)}</span>
@@ -389,7 +390,7 @@ function App() {
                 </button>
               )
             ) : null}
-            <button className="icon-button" aria-label="Ver lembretes">
+            <button className="icon-button" aria-label="Ver lembretes" onClick={() => setAuthNotice("Nenhum lembrete pendente agora.")}>
               <Bell />
             </button>
           </div>
@@ -410,6 +411,20 @@ function App() {
               <span><ShieldCheck /> Revisão manual</span>
               <span><LockKeyhole /> Dados privados</span>
               <span><Gauge /> Match ajustável</span>
+            </div>
+            <div className="career-snapshot" aria-label="Resumo do progresso">
+              <span>
+                <strong>{profile.headline || "Perfil em edição"}</strong>
+                Currículo
+              </span>
+              <span>
+                <strong>{filteredJobs.length || "Fonte pendente"}</strong>
+                Vagas no radar
+              </span>
+              <span>
+                <strong>{activeCount}</strong>
+                Candidaturas ativas
+              </span>
             </div>
           </div>
 

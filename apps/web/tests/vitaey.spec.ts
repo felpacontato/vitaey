@@ -10,7 +10,7 @@ test("filters jobs and completes a reviewed application", async ({ page }, testI
 
   await page.goto("/", { waitUntil: "domcontentloaded" });
   await expect(page.locator("h1")).toContainText("Vitaey");
-  await expect(page.getByRole("heading", { name: "Vagas certas. Currículo pronto. Envio controlado." })).toBeVisible();
+  await expect(page.locator(".hero-copy h2")).toContainText("Vitaey");
   const apiPill = page.locator(".api-pill");
   await expect(apiPill).toContainText(/API ativa|Radar sem fonte|Conectando|Conta sincronizada/);
 
@@ -21,9 +21,9 @@ test("filters jobs and completes a reviewed application", async ({ page }, testI
 
   await page.getByRole("button", { name: "Ver lembretes" }).click();
   await expect(page.locator(".auth-notice")).toContainText("Nenhum lembrete pendente agora.");
-  await page.getByRole("link", { name: /Explorar vagas/ }).click();
+  await page.getByRole("link", { name: /Abrir radar/ }).click();
   await expect(page).toHaveURL(/#vagas$/);
-  await page.getByRole("link", { name: /Revisar currículo/ }).click();
+  await page.getByRole("link", { name: /Revisar/ }).click();
   await expect(page).toHaveURL(/#curriculo$/);
 
   const status = await apiPill.textContent();

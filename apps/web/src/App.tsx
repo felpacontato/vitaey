@@ -351,10 +351,12 @@ function App() {
     <main className="app-shell">
       <aside className="sidebar">
         <div className="brand">
-          <div className="brand-mark">V</div>
+          <div className="brand-mark" aria-hidden="true">
+            <span>V</span>
+          </div>
           <div>
             <strong>Vitaey</strong>
-            <span>Carreira com controle</span>
+            <span>Career signal OS</span>
           </div>
         </div>
         <nav className="nav-list" aria-label="Navegação principal">
@@ -373,9 +375,9 @@ function App() {
       <section className="workspace">
         <header className="topbar">
           <div>
-            <span className="eyebrow">Workspace pessoal</span>
+            <span className="eyebrow">CASE FILE // VITAEY</span>
             <h1>Vitaey</h1>
-            <p className="topbar-copy">Radar pessoal para vagas, currículo e candidaturas revisadas.</p>
+            <p className="topbar-copy">Interface de investigação para vagas, currículo e candidaturas revisadas.</p>
           </div>
           <div className="status-cluster">
             <span className={`api-pill ${apiStatus}`}>{statusLabel(apiStatus)}</span>
@@ -397,20 +399,28 @@ function App() {
         </header>
 
         <section className="hero-surface" id="dashboard" aria-label="Resumo do Vitaey">
+          <div className="hero-meta meta-left" aria-hidden="true">
+            <span>CAM_04 [REC]</span>
+            <strong>SIGNAL_STRONG</strong>
+          </div>
+          <div className="hero-meta meta-right" aria-hidden="true">
+            <span>CASE // VT-01</span>
+            <strong>MANUAL_REVIEW</strong>
+          </div>
           <div className="hero-copy">
-            <span className="eyebrow">Radar de carreira</span>
-            <h2>Vagas certas. Currículo pronto. Envio controlado.</h2>
+            <span className="eyebrow">TOP SECRET // CAREER CASE</span>
+            <h2>Vitaey</h2>
             <p>
-              Vitaey organiza oportunidades, prepara seu material e deixa cada decisão visível antes de qualquer candidatura sair.
+              <strong>Radar pessoal</strong> para oportunidades, currículo e candidaturas com revisão manual antes de qualquer envio.
             </p>
             <div className="hero-actions">
-              <a className="hero-primary" href="#vagas">Explorar vagas <ArrowRight /></a>
-              <a className="hero-secondary" href="#curriculo">Revisar currículo</a>
+              <a className="hero-primary" href="#vagas">Abrir radar <ArrowRight /></a>
+              <a className="hero-secondary" href="#curriculo">Revisar dossiê</a>
             </div>
             <div className="trust-row" aria-label="Garantias do fluxo">
               <span><ShieldCheck /> Revisão manual</span>
               <span><LockKeyhole /> Dados privados</span>
-              <span><Gauge /> Match explicável</span>
+              <span><Gauge /> Match auditável</span>
             </div>
             <div className="career-snapshot" aria-label="Resumo do progresso">
               <span>
@@ -442,7 +452,7 @@ function App() {
               <span>{bestMatch ? "melhor match" : "aguardando fonte"}</span>
             </div>
             <div className="floating-card match-card">
-              <span>Próximo movimento</span>
+              <span>Evidence target</span>
               <strong>{selectedJob?.title ?? "Conectar fonte de vagas"}</strong>
             </div>
             <div className="floating-card privacy-card">

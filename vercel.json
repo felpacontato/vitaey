@@ -1,7 +1,7 @@
 {
-  "buildCommand": "corepack enable && corepack prepare pnpm@10.24.0 --activate && pnpm --dir apps/web run build",
+  "buildCommand": "corepack enable && corepack prepare pnpm@10.24.0 --activate && cd apps/web && corepack pnpm --version && corepack pnpm run build",
   "outputDirectory": "apps/web/dist",
-  "installCommand": "corepack enable && corepack prepare pnpm@10.24.0 --activate && pnpm --dir apps/web install --frozen-lockfile",
+  "installCommand": "corepack enable && corepack prepare pnpm@10.24.0 --activate && cd apps/web && corepack pnpm --version && corepack pnpm install --frozen-lockfile",
   "framework": "vite",
   "rewrites": [
     {

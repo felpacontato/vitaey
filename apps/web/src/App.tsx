@@ -375,7 +375,7 @@ function App() {
           <div>
             <span className="eyebrow">Workspace pessoal</span>
             <h1>Vitaey</h1>
-            <p className="topbar-copy">Organize currículo, vagas e candidaturas em um só lugar.</p>
+            <p className="topbar-copy">Radar pessoal para vagas, currículo e candidaturas revisadas.</p>
           </div>
           <div className="status-cluster">
             <span className={`api-pill ${apiStatus}`}>{statusLabel(apiStatus)}</span>
@@ -399,18 +399,18 @@ function App() {
         <section className="hero-surface" id="dashboard" aria-label="Resumo do Vitaey">
           <div className="hero-copy">
             <span className="eyebrow">Radar de carreira</span>
-            <h2>Candidaturas melhores, com menos ruído.</h2>
+            <h2>Vagas certas. Currículo pronto. Envio controlado.</h2>
             <p>
-              Compare vagas, ajuste currículo e acompanhe cada envio em um fluxo feito para candidatos que querem decidir com segurança.
+              Vitaey organiza oportunidades, prepara seu material e deixa cada decisão visível antes de qualquer candidatura sair.
             </p>
             <div className="hero-actions">
-              <a className="hero-primary" href="#vagas">Ver vagas <ArrowRight /></a>
-              <a className="hero-secondary" href="#curriculo">Atualizar currículo</a>
+              <a className="hero-primary" href="#vagas">Explorar vagas <ArrowRight /></a>
+              <a className="hero-secondary" href="#curriculo">Revisar currículo</a>
             </div>
             <div className="trust-row" aria-label="Garantias do fluxo">
               <span><ShieldCheck /> Revisão manual</span>
               <span><LockKeyhole /> Dados privados</span>
-              <span><Gauge /> Match ajustável</span>
+              <span><Gauge /> Match explicável</span>
             </div>
             <div className="career-snapshot" aria-label="Resumo do progresso">
               <span>
@@ -438,12 +438,12 @@ function App() {
             <span className="radar-node node-c" />
             <div className="radar-center">
               <Target />
-              <strong>{bestMatch ? `${bestMatch}%` : "Sem vagas"}</strong>
-              <span>{bestMatch ? "melhor match" : "fonte pendente"}</span>
+              <strong>{bestMatch ? `${bestMatch}%` : "Radar"}</strong>
+              <span>{bestMatch ? "melhor match" : "aguardando fonte"}</span>
             </div>
             <div className="floating-card match-card">
-              <span>Próxima ação</span>
-              <strong>{selectedJob?.title ?? "Conectar oportunidades"}</strong>
+              <span>Próximo movimento</span>
+              <strong>{selectedJob?.title ?? "Conectar fonte de vagas"}</strong>
             </div>
             <div className="floating-card privacy-card">
               <ShieldCheck />
@@ -834,7 +834,7 @@ function statusLabel(status: "connecting" | "live" | "offline" | "supabase") {
   const labels = {
     connecting: "Conectando",
     live: "API ativa",
-    offline: "Fonte indisponível",
+    offline: "Radar sem fonte",
     supabase: "Conta sincronizada",
   };
   return labels[status];

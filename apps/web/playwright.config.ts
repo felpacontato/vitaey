@@ -12,7 +12,7 @@ export default defineConfig({
     trace: "retain-on-failure",
   },
   webServer: skipWebServer ? undefined : {
-    command: "pnpm run dev -- --host 127.0.0.1 --port 5188 --strictPort",
+    command: "pnpm exec vite --host 127.0.0.1 --port 5188 --strictPort",
     url: baseURL,
     reuseExistingServer: true,
   },

@@ -10,9 +10,9 @@ test("filters jobs and completes a reviewed application", async ({ page }, testI
 
   await page.goto("/", { waitUntil: "domcontentloaded" });
   await expect(page.locator("h1")).toContainText("Vitaey");
-  await expect(page.getByRole("heading", { name: "Candidaturas melhores, com menos ruído." })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Vagas certas. Currículo pronto. Envio controlado." })).toBeVisible();
   const apiPill = page.locator(".api-pill");
-  await expect(apiPill).toContainText(/API ativa|Fonte indisponível|Conectando|Conta sincronizada/);
+  await expect(apiPill).toContainText(/API ativa|Radar sem fonte|Conectando|Conta sincronizada/);
 
   const hasHorizontalOverflow = await page.evaluate(
     () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
@@ -21,13 +21,13 @@ test("filters jobs and completes a reviewed application", async ({ page }, testI
 
   await page.getByRole("button", { name: "Ver lembretes" }).click();
   await expect(page.locator(".auth-notice")).toContainText("Nenhum lembrete pendente agora.");
-  await page.getByRole("link", { name: /Ver vagas/ }).click();
+  await page.getByRole("link", { name: /Explorar vagas/ }).click();
   await expect(page).toHaveURL(/#vagas$/);
-  await page.getByRole("link", { name: /Atualizar currículo/ }).click();
+  await page.getByRole("link", { name: /Revisar currículo/ }).click();
   await expect(page).toHaveURL(/#curriculo$/);
 
   const status = await apiPill.textContent();
-  if (status?.includes("Fonte indisponível")) {
+  if (status?.includes("Radar sem fonte")) {
     await expect(page.locator(".job-list")).toContainText("Nenhuma vaga disponível");
     await expect(page.locator(".details-panel")).toContainText("Nenhuma vaga selecionada");
     await expect(page.locator("#kanban")).toContainText("As etapas aparecem quando você salvar ou iniciar uma candidatura.");

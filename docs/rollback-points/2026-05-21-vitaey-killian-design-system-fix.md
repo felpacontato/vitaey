@@ -27,3 +27,10 @@ npx vercel rollback dpl_G7m2xcH7X7s6oKJMcS9o9pgKssaS
 ```
 
 If rollback by deployment id is unavailable, checkout commit `b9a1ceb16f6478f424e0a733701ef34d98bf98a9`, run validation, then deploy production from the `vitaey` Vercel project.
+
+## Deploy attempt notes
+
+- Failed deployment: `dpl_3kpNgfLKQoPYf2VzsvmxxasBxfe4`
+- Failed deployment URL: `https://vitaey-k91eg5n69-felpas-projects.vercel.app`
+- Failure reason: Vercel used an incompatible pnpm version for `apps/web/pnpm-lock.yaml` lockfile v9.
+- Production aliases remained on previous Ready deployment `dpl_G7m2xcH7X7s6oKJMcS9o9pgKssaS`.

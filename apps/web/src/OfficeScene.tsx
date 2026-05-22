@@ -55,6 +55,8 @@ function OfficeWorld({ signalScore, jobCount, applicationCount, compact }: Offic
   const particlesRef = useRef<THREE.Points>(null);
   const reducedMotion = useReducedMotion();
   const floorTexture = useMemo(() => makeFloorTexture(), []);
+  const wallTexture = useMemo(() => makeWallTexture(), []);
+  const carpetTexture = useMemo(() => makeCarpetTexture(), []);
   const deskTexture = useMemo(() => makeDeskTexture(), []);
   const fabricTexture = useMemo(() => makeFabricTexture(), []);
   const cameraPath = useMemo(
@@ -121,7 +123,7 @@ function OfficeWorld({ signalScore, jobCount, applicationCount, compact }: Offic
       <pointLight position={[4.8, 2.4, -1.5]} intensity={28} distance={16} color={red} />
       <pointLight position={[-5.7, 3.0, -4.2]} intensity={15} distance={16} color={cyan} />
 
-      <OfficeShell floorTexture={floorTexture} />
+      <OfficeShell floorTexture={floorTexture} wallTexture={wallTexture} carpetTexture={carpetTexture} />
       <CeilingSystem />
       <MeetingZone deskTexture={deskTexture} fabricTexture={fabricTexture} />
       <DeskCluster deskTexture={deskTexture} fabricTexture={fabricTexture} compact={compact} />
@@ -129,6 +131,8 @@ function OfficeWorld({ signalScore, jobCount, applicationCount, compact }: Offic
       <ResumeScanner />
       <PipelineWall />
       {!compact ? <ServerRack /> : null}
+      {!compact ? <ExecutiveShelving /> : null}
+      {!compact ? <OfficeMicroDetails /> : null}
       {!compact ? <PlantCluster position={[-6.9, -0.52, -4.9]} /> : null}
       {!compact ? <PlantCluster position={[6.5, -0.52, -4.7]} /> : null}
 
@@ -163,12 +167,24 @@ function OfficeWorld({ signalScore, jobCount, applicationCount, compact }: Offic
   );
 }
 
-function OfficeShell({ floorTexture }: { floorTexture: THREE.Texture }) {
+function OfficeShell({
+  floorTexture,
+  wallTexture,
+  carpetTexture,
+}: {
+  floorTexture: THREE.Texture;
+  wallTexture: THREE.Texture;
+  carpetTexture: THREE.Texture;
+}) {
   return (
     <group>
       <mesh position={[0, -1.08, -1.15]} receiveShadow>
         <boxGeometry args={[18, 0.08, 22]} />
         <meshStandardMaterial map={floorTexture} color="#121317" roughness={0.62} metalness={0.18} />
+      </mesh>
+      <mesh position={[0, -1.032, -1.32]} rotation={[-Math.PI / 2, 0, 0]}>
+        <planeGeometry args={[15.2, 17.4]} />
+        <meshStandardMaterial map={carpetTexture} color="#170809" roughness={0.82} metalness={0.02} transparent opacity={0.88} />
       </mesh>
       <mesh position={[0, 4.22, -1.15]}>
         <boxGeometry args={[18, 0.08, 22]} />
@@ -176,12 +192,12 @@ function OfficeShell({ floorTexture }: { floorTexture: THREE.Texture }) {
       </mesh>
       <mesh position={[0, 1.5, -8.2]}>
         <boxGeometry args={[18, 5.25, 0.08]} />
-        <meshStandardMaterial color="#050506" roughness={0.74} metalness={0.26} />
+        <meshStandardMaterial map={wallTexture} color="#050506" roughness={0.74} metalness={0.26} />
       </mesh>
       {[-8.22, 8.22].map((x) => (
         <mesh key={x} position={[x, 1.5, -1.15]}>
           <boxGeometry args={[0.08, 5.25, 22]} />
-          <meshStandardMaterial color="#050506" roughness={0.74} metalness={0.26} />
+          <meshStandardMaterial map={wallTexture} color="#050506" roughness={0.74} metalness={0.26} />
         </mesh>
       ))}
       {Array.from({ length: 9 }).map((_, index) => {
@@ -202,6 +218,122 @@ function OfficeShell({ floorTexture }: { floorTexture: THREE.Texture }) {
       <mesh position={[0, -1.035, -1.15]} rotation={[-Math.PI / 2, 0, 0]}>
         <ringGeometry args={[2.4, 7.7, 160]} />
         <meshBasicMaterial color={deepRed} transparent opacity={0.12} side={THREE.DoubleSide} />
+      </mesh>
+      <FloorInlays />
+      <WallCladding />
+      <OfficeBrandSign />
+    </group>
+  );
+}
+
+function FloorInlays() {
+  return (
+    <group>
+      {Array.from({ length: 13 }).map((_, index) => (
+        <mesh key={`floor-x-${index}`} position={[-7.2 + index * 1.2, -0.982, -1.15]} rotation={[-Math.PI / 2, 0, 0]}>
+          <planeGeometry args={[0.014, 17.2]} />
+          <meshBasicMaterial color="#2d2021" transparent opacity={0.28} side={THREE.DoubleSide} />
+        </mesh>
+      ))}
+      {Array.from({ length: 15 }).map((_, index) => (
+        <mesh key={`floor-z-${index}`} position={[0, -0.981, -8.8 + index * 1.2]} rotation={[-Math.PI / 2, 0, Math.PI / 2]}>
+          <planeGeometry args={[0.014, 15.2]} />
+          <meshBasicMaterial color="#261d20" transparent opacity={0.24} side={THREE.DoubleSide} />
+        </mesh>
+      ))}
+      <Line
+        points={[
+          [-6.8, -0.92, 3.2],
+          [-4.2, -0.9, 0.55],
+          [-1.1, -0.88, -2.55],
+          [2.45, -0.9, -3.25],
+          [5.9, -0.92, -0.7],
+        ]}
+        color={cyan}
+        lineWidth={0.75}
+        transparent
+        opacity={0.34}
+      />
+      <Line
+        points={[
+          [-7.0, -0.91, 2.8],
+          [-4.4, -0.9, 0.15],
+          [-1.4, -0.88, -2.85],
+          [2.1, -0.9, -3.6],
+          [5.65, -0.92, -1.05],
+        ]}
+        color={red}
+        lineWidth={0.9}
+        transparent
+        opacity={0.42}
+      />
+    </group>
+  );
+}
+
+function WallCladding() {
+  return (
+    <group>
+      {[-6.4, -3.2, 0, 3.2, 6.4].map((x, index) => (
+        <group key={x} position={[x, 1.18, -8.12]}>
+          <RoundedBox args={[1.85, 2.55, 0.045]} radius={0.025}>
+            <meshStandardMaterial color={index % 2 ? "#08090a" : "#070607"} roughness={0.78} metalness={0.24} />
+          </RoundedBox>
+          <mesh position={[0, 1.34, 0.035]}>
+            <boxGeometry args={[1.62, 0.018, 0.018]} />
+            <meshBasicMaterial color={index % 2 ? cyan : red} transparent opacity={0.32} />
+          </mesh>
+          <mesh position={[0, -1.34, 0.035]}>
+            <boxGeometry args={[1.62, 0.018, 0.018]} />
+            <meshBasicMaterial color={index % 2 ? red : cyan} transparent opacity={0.22} />
+          </mesh>
+        </group>
+      ))}
+      {[-7.2, 7.2].map((x) => (
+        <group key={x} position={[x, 1.45, -6.25]} rotation={[0, x < 0 ? 0.18 : -0.18, 0]}>
+          <RoundedBox args={[0.72, 2.72, 0.16]} radius={0.035}>
+            <meshStandardMaterial color="#070708" roughness={0.48} metalness={0.58} />
+          </RoundedBox>
+          <mesh position={[0, 0, 0.105]}>
+            <boxGeometry args={[0.035, 2.55, 0.035]} />
+            <meshBasicMaterial color={red} transparent opacity={0.42} />
+          </mesh>
+        </group>
+      ))}
+      <CityReflection />
+    </group>
+  );
+}
+
+function CityReflection() {
+  return (
+    <group position={[0, 2.34, -8.08]}>
+      {Array.from({ length: 24 }).map((_, index) => {
+        const x = -7.4 + index * 0.64;
+        const h = 0.22 + ((index * 17) % 9) * 0.055;
+        return (
+          <mesh key={index} position={[x, -0.42 + h / 2, 0.06]}>
+            <boxGeometry args={[0.2 + (index % 3) * 0.06, h, 0.016]} />
+            <meshBasicMaterial color={index % 4 === 0 ? red : cyan} transparent opacity={index % 4 === 0 ? 0.22 : 0.18} />
+          </mesh>
+        );
+      })}
+    </group>
+  );
+}
+
+function OfficeBrandSign() {
+  return (
+    <group position={[0, 2.9, -8.05]}>
+      <Text fontSize={0.34} color="#f3f0ea" anchorX="center" anchorY="middle">
+        VITAEY
+      </Text>
+      <Text position={[0, -0.34, 0]} fontSize={0.08} color={red} anchorX="center" anchorY="middle">
+        CAREER SIGNAL OFFICE
+      </Text>
+      <mesh position={[0, 0, -0.02]}>
+        <boxGeometry args={[2.5, 0.02, 0.02]} />
+        <meshBasicMaterial color={red} transparent opacity={0.42} />
       </mesh>
     </group>
   );
@@ -235,10 +367,31 @@ function MeetingZone({ deskTexture, fabricTexture }: { deskTexture: THREE.Textur
       <RoundedBox args={[5.6, 0.18, 1.62]} radius={0.06} position={[0, -0.62, 0.78]}>
         <meshStandardMaterial map={deskTexture} color="#161212" roughness={0.44} metalness={0.32} />
       </RoundedBox>
+      <RoundedBox args={[2.2, 0.035, 0.22]} radius={0.025} position={[0, -0.5, 0.78]}>
+        <meshStandardMaterial color="#050506" roughness={0.36} metalness={0.62} />
+      </RoundedBox>
+      <mesh position={[0, -0.465, 0.78]}>
+        <cylinderGeometry args={[0.16, 0.16, 0.035, 24]} />
+        <meshStandardMaterial color="#090a0c" roughness={0.44} metalness={0.54} />
+      </mesh>
+      {[-1.85, -0.55, 0.55, 1.85].map((x, index) => (
+        <group key={x} position={[x, -0.51, 0.78 + (index % 2 ? 0.38 : -0.38)]} rotation={[0, index % 2 ? -0.14 : 0.18, 0]}>
+          <RoundedBox args={[0.46, 0.012, 0.29]} radius={0.008}>
+            <meshStandardMaterial color="#eee8dd" roughness={0.6} metalness={0.02} />
+          </RoundedBox>
+          <Line points={[[-0.18, 0.02, 0.06], [0.12, 0.021, 0.03]]} color={red} lineWidth={1} />
+        </group>
+      ))}
       <mesh position={[0, 0.72, 0]}>
         <boxGeometry args={[4.75, 1.95, 0.045]} />
         <meshPhysicalMaterial color="#0b1418" roughness={0.15} metalness={0.05} transparent opacity={0.25} transmission={0.45} />
       </mesh>
+      {[-1.55, 0, 1.55].map((x) => (
+        <mesh key={x} position={[x, 0.72, 0.028]}>
+          <boxGeometry args={[0.018, 1.88, 0.018]} />
+          <meshBasicMaterial color="#9bdff0" transparent opacity={0.18} />
+        </mesh>
+      ))}
       {[-2.7, 2.7].map((x) => (
         <mesh key={x} position={[x, 0.5, 0]}>
           <boxGeometry args={[0.12, 2.58, 0.12]} />
@@ -287,6 +440,7 @@ function DeskCluster({
           <OfficeChair position={[0, -0.62, 1.22]} rotation={[0, Math.PI, 0]} fabricTexture={fabricTexture} />
           <CpuTower position={[0.93, -0.44, -0.3]} />
           {index % 2 === 0 ? <DeskLamp position={[-0.78, -0.34, -0.2]} /> : <DocumentTray position={[-0.8, -0.58, 0.28]} />}
+          <DeskAccessories index={index} />
         </group>
       ))}
     </group>
@@ -299,6 +453,24 @@ function OfficeDesk({ deskTexture, screen }: { deskTexture: THREE.Texture; scree
       <RoundedBox args={[2.35, 0.16, 1.28]} radius={0.04} position={[0, -0.7, 0]}>
         <meshStandardMaterial map={deskTexture} color="#171212" roughness={0.42} metalness={0.36} />
       </RoundedBox>
+      <mesh position={[-1.08, -0.54, 0.01]}>
+        <boxGeometry args={[0.035, 0.38, 1.08]} />
+        <meshStandardMaterial color="#080708" roughness={0.5} metalness={0.34} />
+      </mesh>
+      <mesh position={[1.08, -0.54, 0.01]}>
+        <boxGeometry args={[0.035, 0.38, 1.08]} />
+        <meshStandardMaterial color="#080708" roughness={0.5} metalness={0.34} />
+      </mesh>
+      {[-0.42, 0, 0.42].map((z) => (
+        <mesh key={z} position={[1.102, -0.47, z]}>
+          <boxGeometry args={[0.018, 0.018, 0.24]} />
+          <meshBasicMaterial color={z === 0 ? red : "#282a2e"} transparent opacity={0.78} />
+        </mesh>
+      ))}
+      <mesh position={[0.76, -0.605, -0.28]} rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[0.08, 0.105, 28]} />
+        <meshStandardMaterial color="#050506" roughness={0.5} metalness={0.52} />
+      </mesh>
       {[-0.92, 0.92].flatMap((x) =>
         [-0.46, 0.46].map((z) => (
           <mesh key={`${x}-${z}`} position={[x, -0.23, z]}>
@@ -311,6 +483,17 @@ function OfficeDesk({ deskTexture, screen }: { deskTexture: THREE.Texture; scree
       <Keyboard position={[0, -0.59, 0.16]} />
       <Mouse position={[0.62, -0.58, 0.18]} />
       <Laptop position={[-0.66, -0.57, 0.22]} variant={screen === "pipeline" ? "radar" : "pipeline"} />
+      <Line
+        points={[
+          [0.14, -0.59, -0.18],
+          [0.42, -0.62, -0.2],
+          [0.78, -0.62, -0.28],
+        ]}
+        color="#18191d"
+        lineWidth={1}
+        transparent
+        opacity={0.8}
+      />
     </group>
   );
 }
@@ -381,6 +564,48 @@ function Mouse({ position }: { position: [number, number, number] }) {
   );
 }
 
+function DeskAccessories({ index }: { index: number }) {
+  return (
+    <group>
+      <RoundedBox args={[0.42, 0.012, 0.28]} radius={0.008} position={[-0.17, -0.596, 0.45]} rotation={[0, 0.12, 0]}>
+        <meshStandardMaterial color={index % 2 ? "#24272c" : "#efe9df"} roughness={0.65} metalness={0.02} />
+      </RoundedBox>
+      <Line
+        points={[
+          [-0.34, -0.585, 0.5],
+          [-0.05, -0.582, 0.49],
+        ]}
+        color={index % 2 ? cyan : red}
+        lineWidth={1.1}
+        transparent
+        opacity={0.7}
+      />
+      <group position={[0.9, -0.55, 0.38]}>
+        <mesh>
+          <cylinderGeometry args={[0.075, 0.08, 0.14, 18]} />
+          <meshStandardMaterial color="#0b0c0e" roughness={0.42} metalness={0.36} />
+        </mesh>
+        <mesh position={[0.07, 0.005, 0]} rotation={[Math.PI / 2, 0, 0]}>
+          <torusGeometry args={[0.06, 0.012, 8, 18, Math.PI * 1.2]} />
+          <meshStandardMaterial color="#0b0c0e" roughness={0.42} metalness={0.36} />
+        </mesh>
+      </group>
+      <group position={[-0.94, -0.49, 0.46]}>
+        <mesh>
+          <cylinderGeometry args={[0.07, 0.055, 0.22, 12]} />
+          <meshStandardMaterial color="#07080a" roughness={0.5} metalness={0.44} />
+        </mesh>
+        {[-0.04, 0.01, 0.05].map((x, pinIndex) => (
+          <mesh key={x} position={[x, 0.16, 0]} rotation={[0.1 + pinIndex * 0.2, 0, 0.08]}>
+            <cylinderGeometry args={[0.006, 0.006, 0.24, 6]} />
+            <meshBasicMaterial color={pinIndex === 1 ? red : cyan} transparent opacity={0.85} />
+          </mesh>
+        ))}
+      </group>
+    </group>
+  );
+}
+
 function OfficeChair({
   position,
   rotation = [0, 0, 0],
@@ -428,10 +653,21 @@ function OfficeChair({
 
 function CpuTower({ position }: { position: [number, number, number] }) {
   return (
-    <RoundedBox args={[0.26, 0.62, 0.4]} radius={0.045} position={position}>
-      <meshStandardMaterial color="#050506" roughness={0.42} metalness={0.62} />
-      <meshBasicMaterial attach="material-0" color="#050506" />
-    </RoundedBox>
+    <group position={position}>
+      <RoundedBox args={[0.26, 0.62, 0.4]} radius={0.045}>
+        <meshStandardMaterial color="#050506" roughness={0.42} metalness={0.62} />
+      </RoundedBox>
+      {Array.from({ length: 4 }).map((_, index) => (
+        <mesh key={index} position={[0, 0.18 - index * 0.12, 0.211]}>
+          <boxGeometry args={[0.17, 0.018, 0.012]} />
+          <meshBasicMaterial color={index % 2 ? "#2d3138" : red} transparent opacity={index % 2 ? 0.72 : 0.88} />
+        </mesh>
+      ))}
+      <mesh position={[0.08, -0.23, 0.214]}>
+        <sphereGeometry args={[0.018, 10, 10]} />
+        <meshBasicMaterial color={cyan} />
+      </mesh>
+    </group>
   );
 }
 
@@ -590,6 +826,148 @@ function ServerRack() {
   );
 }
 
+function ExecutiveShelving() {
+  return (
+    <group>
+      <ShelfUnit position={[-6.95, 0.56, -6.75]} rotation={[0, 0.14, 0]} />
+      <ShelfUnit position={[6.95, 0.56, -6.75]} rotation={[0, -0.14, 0]} mirrored />
+    </group>
+  );
+}
+
+function ShelfUnit({
+  position,
+  rotation,
+  mirrored = false,
+}: {
+  position: [number, number, number];
+  rotation: [number, number, number];
+  mirrored?: boolean;
+}) {
+  const binders = mirrored
+    ? ["#15191f", "#ff2a2a", "#2b3038", "#6be7ff", "#16191f", "#2b3038"]
+    : ["#2b3038", "#15191f", "#6be7ff", "#2b3038", "#ff2a2a", "#16191f"];
+
+  return (
+    <group position={position} rotation={rotation}>
+      <RoundedBox args={[1.55, 2.12, 0.42]} radius={0.04}>
+        <meshStandardMaterial color="#070708" roughness={0.54} metalness={0.42} />
+      </RoundedBox>
+      {[-0.62, 0, 0.62].map((y) => (
+        <mesh key={y} position={[0, y, 0.23]}>
+          <boxGeometry args={[1.38, 0.045, 0.08]} />
+          <meshStandardMaterial color="#111014" roughness={0.44} metalness={0.5} />
+        </mesh>
+      ))}
+      {binders.map((color, index) => (
+        <RoundedBox
+          key={index}
+          args={[0.14 + (index % 2) * 0.035, 0.52 + (index % 3) * 0.04, 0.28]}
+          radius={0.012}
+          position={[-0.55 + index * 0.19, 0.83 - (index % 2) * 0.03, 0.26]}
+          rotation={[0, 0, (index % 3 - 1) * 0.035]}
+        >
+          <meshStandardMaterial color={color} roughness={0.48} metalness={color === cyan || color === red ? 0.2 : 0.36} />
+        </RoundedBox>
+      ))}
+      {Array.from({ length: 5 }).map((_, index) => (
+        <RoundedBox key={index} args={[0.25, 0.18, 0.28]} radius={0.02} position={[-0.46 + index * 0.24, 0.1, 0.26]}>
+          <meshStandardMaterial color={index % 2 ? "#171012" : "#0d1115"} roughness={0.58} metalness={0.18} />
+        </RoundedBox>
+      ))}
+      <mesh position={[-0.44, -0.76, 0.24]}>
+        <cylinderGeometry args={[0.13, 0.17, 0.38, 18]} />
+        <meshStandardMaterial color="#101816" roughness={0.7} metalness={0.04} />
+      </mesh>
+      <mesh position={[0.44, -0.76, 0.24]}>
+        <octahedronGeometry args={[0.18, 0]} />
+        <meshStandardMaterial color={mirrored ? cyan : red} emissive={mirrored ? cyan : red} emissiveIntensity={0.7} roughness={0.28} />
+      </mesh>
+    </group>
+  );
+}
+
+function OfficeMicroDetails() {
+  return (
+    <group>
+      <FloatingGlassBoards />
+      <CableRuns />
+      <ReceptionPedestal />
+    </group>
+  );
+}
+
+function FloatingGlassBoards() {
+  return (
+    <group>
+      {[
+        { x: -6.2, y: 2.05, z: -1.5, r: 0.58, title: "VAGAS" },
+        { x: 6.15, y: 2.12, z: 0.38, r: -0.68, title: "ENVIO" },
+      ].map((panel) => (
+        <group key={panel.title} position={[panel.x, panel.y, panel.z]} rotation={[0.02, panel.r, 0]}>
+          <RoundedBox args={[1.58, 0.92, 0.035]} radius={0.025}>
+            <meshPhysicalMaterial color="#071317" transparent opacity={0.24} roughness={0.16} transmission={0.4} />
+          </RoundedBox>
+          <Text position={[-0.64, 0.3, 0.035]} fontSize={0.08} color={red} anchorX="left">
+            {panel.title}
+          </Text>
+          {[0, 1, 2].map((row) => (
+            <Line
+              key={row}
+              points={[
+                [-0.6, 0.1 - row * 0.22, 0.04],
+                [0.52 - row * 0.12, 0.1 - row * 0.22, 0.04],
+              ]}
+              color={row % 2 ? cyan : red}
+              lineWidth={1.2}
+              transparent
+              opacity={0.72}
+            />
+          ))}
+        </group>
+      ))}
+    </group>
+  );
+}
+
+function CableRuns() {
+  return (
+    <group>
+      {[-4.85, -1.65, 1.65, 4.85].map((x, index) => (
+        <Line
+          key={x}
+          points={[
+            [x + 0.78, -0.98, 0.42],
+            [x + 0.4, -1.0, -0.2],
+            [x * 0.62, -1.0, -1.65 - index * 0.2],
+          ]}
+          color={index % 2 ? "#111418" : "#230809"}
+          lineWidth={1.4}
+          transparent
+          opacity={0.82}
+        />
+      ))}
+    </group>
+  );
+}
+
+function ReceptionPedestal() {
+  return (
+    <group position={[0, -0.48, 3.25]}>
+      <RoundedBox args={[1.5, 0.72, 0.48]} radius={0.055}>
+        <meshStandardMaterial color="#070607" roughness={0.42} metalness={0.54} />
+      </RoundedBox>
+      <Text position={[-0.46, 0.05, 0.26]} fontSize={0.12} color="#f3f0ea" anchorX="left">
+        Vitaey
+      </Text>
+      <mesh position={[0, -0.12, 0.27]}>
+        <boxGeometry args={[1.05, 0.018, 0.018]} />
+        <meshBasicMaterial color={red} transparent opacity={0.74} />
+      </mesh>
+    </group>
+  );
+}
+
 function PlantCluster({ position }: { position: [number, number, number] }) {
   return (
     <group position={position}>
@@ -644,9 +1022,19 @@ function makeScreenTexture(variant: string, title = "VITAEY", metric?: string) {
   ctx.font = "700 34px Arial";
   ctx.letterSpacing = "2px";
   ctx.fillText(title.toUpperCase(), 54, 66);
+  const headline =
+    variant === "radar"
+      ? "RADAR"
+      : variant === "pipeline"
+        ? "PIPELINE"
+        : variant === "curriculo"
+          ? "CURRICULO"
+          : variant === "perfil"
+            ? "PERFIL"
+            : "MATCH";
   ctx.fillStyle = "#f3f0ea";
-  ctx.font = "700 74px Georgia";
-  ctx.fillText(variant === "radar" ? "RADAR" : variant === "pipeline" ? "PIPELINE" : "MATCH", 54, 152);
+  ctx.font = headline.length > 7 ? "700 58px Georgia" : "700 74px Georgia";
+  ctx.fillText(headline, 54, 152);
 
   drawScreenVariant(ctx, variant, metric);
 
@@ -693,6 +1081,28 @@ function drawScreenVariant(ctx: CanvasRenderingContext2D, variant: string, metri
     return;
   }
 
+  if (variant === "perfil") {
+    ctx.strokeStyle = "rgba(107,231,255,0.55)";
+    ctx.beginPath();
+    ctx.arc(170, 302, 62, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.fillStyle = "rgba(255,42,42,0.62)";
+    ctx.fillRect(270, 250, 520, 24);
+    ctx.fillStyle = "rgba(107,231,255,0.38)";
+    ctx.fillRect(270, 310, 440, 20);
+    ctx.fillStyle = "rgba(255,255,255,0.24)";
+    ctx.fillRect(270, 366, 610, 18);
+    ["SKILLS", "SALARIO", "LOCAL", "SENIORIDADE"].forEach((label, index) => {
+      const x = 74 + index * 220;
+      ctx.strokeStyle = index % 2 ? "rgba(107,231,255,0.52)" : "rgba(255,42,42,0.58)";
+      ctx.strokeRect(x, 448, 164, 42);
+      ctx.fillStyle = "#f3f0ea";
+      ctx.font = "700 16px Arial";
+      ctx.fillText(label, x + 18, 476);
+    });
+    return;
+  }
+
   for (let index = 0; index < 6; index += 1) {
     const x = 72 + index * 135;
     const h = 82 + Math.sin(index * 1.7) * 42 + index * 10;
@@ -715,6 +1125,22 @@ function makeFloorTexture() {
   texture.wrapS = THREE.RepeatWrapping;
   texture.wrapT = THREE.RepeatWrapping;
   texture.repeat.set(8, 8);
+  return texture;
+}
+
+function makeWallTexture() {
+  const texture = makeNoiseTexture("#050506", "#17191d", 0.12);
+  texture.wrapS = THREE.RepeatWrapping;
+  texture.wrapT = THREE.RepeatWrapping;
+  texture.repeat.set(3, 2);
+  return texture;
+}
+
+function makeCarpetTexture() {
+  const texture = makeNoiseTexture("#190708", "#381113", 0.2);
+  texture.wrapS = THREE.RepeatWrapping;
+  texture.wrapT = THREE.RepeatWrapping;
+  texture.repeat.set(9, 7);
   return texture;
 }
 

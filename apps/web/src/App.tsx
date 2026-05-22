@@ -337,16 +337,6 @@ function App() {
 
   return (
     <main className="experience-shell">
-      <video
-        className="office-video-backdrop"
-        src="/media/office-workers-pexels-7966581.mp4"
-        poster="/media/office-workers-pexels-7966581.jpg"
-        autoPlay
-        muted
-        loop
-        playsInline
-        aria-hidden="true"
-      />
       <Suspense fallback={<div className="office-webgl office-webgl-fallback" aria-hidden="true" />}>
         <OfficeScene signalScore={bestMatch || 72} jobCount={jobs.length} applicationCount={applications.length} />
       </Suspense>

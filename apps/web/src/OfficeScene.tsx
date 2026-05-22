@@ -193,14 +193,26 @@ function OfficeShell({
         <boxGeometry args={[18, 0.08, 22]} />
         <meshStandardMaterial color="#050506" roughness={0.72} metalness={0.25} />
       </mesh>
-      <mesh position={[0, 1.5, -8.2]}>
-        <boxGeometry args={[18, 5.25, 0.08]} />
-        <meshStandardMaterial map={wallTexture} bumpMap={wallTexture} bumpScale={0.012} color="#050506" roughness={0.78} metalness={0.2} />
+      <mesh position={[0, 1.52, -8.35]}>
+        <boxGeometry args={[18.2, 5.45, 0.18]} />
+        <meshStandardMaterial map={wallTexture} bumpMap={wallTexture} bumpScale={0.018} color="#20252c" roughness={0.68} metalness={0.2} emissive="#030507" emissiveIntensity={0.28} />
+      </mesh>
+      <mesh position={[0, 1.1, -8.235]}>
+        <boxGeometry args={[17.65, 3.15, 0.08]} />
+        <meshStandardMaterial color="#181d23" roughness={0.56} metalness={0.3} emissive="#040607" emissiveIntensity={0.18} />
+      </mesh>
+      <mesh position={[0, 2.72, -8.18]}>
+        <boxGeometry args={[17.75, 0.62, 0.09]} />
+        <meshStandardMaterial color="#252b33" roughness={0.48} metalness={0.34} emissive="#040607" emissiveIntensity={0.16} />
+      </mesh>
+      <mesh position={[0, -0.56, -8.15]}>
+        <boxGeometry args={[17.7, 0.62, 0.12]} />
+        <meshStandardMaterial color="#0c0d10" roughness={0.48} metalness={0.42} />
       </mesh>
       {[-8.22, 8.22].map((x) => (
         <mesh key={x} position={[x, 1.5, -1.15]}>
           <boxGeometry args={[0.08, 5.25, 22]} />
-          <meshStandardMaterial map={wallTexture} bumpMap={wallTexture} bumpScale={0.012} color="#050506" roughness={0.78} metalness={0.2} />
+          <meshStandardMaterial map={wallTexture} bumpMap={wallTexture} bumpScale={0.012} color="#0e1115" roughness={0.76} metalness={0.2} />
         </mesh>
       ))}
       {Array.from({ length: 9 }).map((_, index) => {
@@ -223,6 +235,7 @@ function OfficeShell({
         <meshBasicMaterial color={deepRed} transparent opacity={0.12} side={THREE.DoubleSide} />
       </mesh>
       <FloorInlays />
+      <ClosedBackWall />
       <WallCladding />
       <ArchitecturalTrims />
       <OfficeBrandSign />
@@ -351,13 +364,91 @@ function FloorInlays() {
   );
 }
 
+function ClosedBackWall() {
+  return (
+    <group>
+      <RoundedBox args={[17.25, 4.38, 0.13]} radius={0.035} position={[0, 1.48, -8.11]}>
+        <meshStandardMaterial color="#171c22" roughness={0.62} metalness={0.26} emissive="#030506" emissiveIntensity={0.22} />
+      </RoundedBox>
+      <RoundedBox args={[16.5, 1.18, 0.08]} radius={0.025} position={[0, 2.58, -7.985]}>
+        <meshStandardMaterial color="#222831" roughness={0.52} metalness={0.32} emissive="#050708" emissiveIntensity={0.2} />
+      </RoundedBox>
+      <RoundedBox args={[16.5, 1.36, 0.08]} radius={0.025} position={[0, 0.14, -7.985]}>
+        <meshStandardMaterial color="#151a20" roughness={0.56} metalness={0.28} emissive="#030506" emissiveIntensity={0.2} />
+      </RoundedBox>
+      {[-7.55, -5.05, -2.55, 0, 2.55, 5.05, 7.55].map((x, index) => (
+        <group key={x} position={[x, 1.15, -7.95]}>
+          <RoundedBox args={[2.1, 3.35, 0.09]} radius={0.018}>
+            <meshStandardMaterial
+              color={index % 2 ? "#20262e" : "#192027"}
+              roughness={0.58}
+              metalness={0.28}
+              emissive={index % 2 ? "#040607" : "#030506"}
+              emissiveIntensity={0.24}
+            />
+          </RoundedBox>
+          <mesh position={[0, 0, 0.066]}>
+            <boxGeometry args={[0.035, 3.08, 0.018]} />
+            <meshBasicMaterial color="#333941" transparent opacity={0.38} />
+          </mesh>
+          <mesh position={[0, 1.54, 0.065]}>
+            <boxGeometry args={[1.82, 0.026, 0.018]} />
+            <meshBasicMaterial color={index % 2 ? cyan : red} transparent opacity={0.34} />
+          </mesh>
+          <mesh position={[0, -1.54, 0.065]}>
+            <boxGeometry args={[1.82, 0.026, 0.018]} />
+            <meshBasicMaterial color={index % 2 ? red : cyan} transparent opacity={0.26} />
+          </mesh>
+        </group>
+      ))}
+      {[-6.28, -3.76, -1.25, 1.25, 3.76, 6.28].map((x, index) => (
+        <mesh key={`rib-${x}`} position={[x, 1.5, -7.84]}>
+          <boxGeometry args={[0.05, 4.05, 0.055]} />
+          <meshBasicMaterial color={index % 2 ? cyan : red} transparent opacity={index % 2 ? 0.2 : 0.28} />
+        </mesh>
+      ))}
+      {[-8.04, 8.04].map((x) => (
+        <group key={x} position={[x, 1.25, -7.1]} rotation={[0, x < 0 ? 0.44 : -0.44, 0]}>
+          <RoundedBox args={[1.55, 4.0, 0.16]} radius={0.03}>
+            <meshStandardMaterial color="#1d232b" roughness={0.54} metalness={0.28} emissive="#030506" emissiveIntensity={0.18} />
+          </RoundedBox>
+          <mesh position={[0, 0, 0.1]}>
+            <boxGeometry args={[0.04, 3.55, 0.022]} />
+            <meshBasicMaterial color={cyan} transparent opacity={0.28} />
+          </mesh>
+        </group>
+      ))}
+      <mesh position={[0, 3.88, -7.82]}>
+        <boxGeometry args={[17.75, 0.32, 0.28]} />
+        <meshStandardMaterial color="#171b21" roughness={0.46} metalness={0.52} emissive="#020405" emissiveIntensity={0.18} />
+      </mesh>
+      <mesh position={[0, -0.93, -7.82]}>
+        <boxGeometry args={[17.75, 0.22, 0.3]} />
+        <meshStandardMaterial color="#07080a" roughness={0.5} metalness={0.48} />
+      </mesh>
+      <mesh position={[0, 1.48, -7.99]}>
+        <boxGeometry args={[16.8, 0.045, 0.035]} />
+        <meshBasicMaterial color={red} transparent opacity={0.42} />
+      </mesh>
+      <mesh position={[0, 2.94, -7.99]}>
+        <boxGeometry args={[16.8, 0.035, 0.035]} />
+        <meshBasicMaterial color={cyan} transparent opacity={0.28} />
+      </mesh>
+      <mesh position={[0, 0.62, -7.84]}>
+        <boxGeometry args={[16.8, 0.032, 0.035]} />
+        <meshBasicMaterial color="#343941" transparent opacity={0.42} />
+      </mesh>
+    </group>
+  );
+}
+
 function WallCladding() {
   return (
     <group>
       {[-6.4, -3.2, 0, 3.2, 6.4].map((x, index) => (
-        <group key={x} position={[x, 1.18, -8.12]}>
+        <group key={x} position={[x, 1.18, -7.86]}>
           <RoundedBox args={[1.85, 2.55, 0.045]} radius={0.025}>
-            <meshStandardMaterial color={index % 2 ? "#08090a" : "#070607"} roughness={0.78} metalness={0.24} />
+            <meshStandardMaterial color={index % 2 ? "#252b33" : "#1d242b"} roughness={0.58} metalness={0.3} emissive="#030506" emissiveIntensity={0.18} />
           </RoundedBox>
           <mesh position={[0, 1.34, 0.035]}>
             <boxGeometry args={[1.62, 0.018, 0.018]} />
@@ -372,7 +463,7 @@ function WallCladding() {
       {[-7.2, 7.2].map((x) => (
         <group key={x} position={[x, 1.45, -6.25]} rotation={[0, x < 0 ? 0.18 : -0.18, 0]}>
           <RoundedBox args={[0.72, 2.72, 0.16]} radius={0.035}>
-            <meshStandardMaterial color="#070708" roughness={0.48} metalness={0.58} />
+            <meshStandardMaterial color="#15191f" roughness={0.48} metalness={0.42} />
           </RoundedBox>
           <mesh position={[0, 0, 0.105]}>
             <boxGeometry args={[0.035, 2.55, 0.035]} />
@@ -387,14 +478,14 @@ function WallCladding() {
 
 function CityReflection() {
   return (
-    <group position={[0, 2.34, -8.08]}>
+    <group position={[0, 2.34, -7.82]}>
       {Array.from({ length: 24 }).map((_, index) => {
         const x = -7.4 + index * 0.64;
         const h = 0.22 + ((index * 17) % 9) * 0.055;
         return (
           <mesh key={index} position={[x, -0.42 + h / 2, 0.06]}>
             <boxGeometry args={[0.2 + (index % 3) * 0.06, h, 0.016]} />
-            <meshBasicMaterial color={index % 4 === 0 ? red : cyan} transparent opacity={index % 4 === 0 ? 0.22 : 0.18} />
+            <meshBasicMaterial color={index % 4 === 0 ? red : cyan} transparent opacity={index % 4 === 0 ? 0.14 : 0.12} />
           </mesh>
         );
       })}
@@ -404,7 +495,7 @@ function CityReflection() {
 
 function OfficeBrandSign() {
   return (
-    <group position={[0, 2.9, -8.05]}>
+    <group position={[0, 2.9, -7.79]}>
       <Text fontSize={0.34} color="#f3f0ea" anchorX="center" anchorY="middle">
         VITAEY
       </Text>
@@ -1086,6 +1177,17 @@ function CommandRoomDetails() {
 function WallScreenArray() {
   return (
     <group>
+      <RoundedBox args={[11.4, 1.42, 0.08]} radius={0.035} position={[0, 2.42, -8.08]}>
+        <meshStandardMaterial color="#252d36" roughness={0.48} metalness={0.34} emissive="#071015" emissiveIntensity={0.36} />
+      </RoundedBox>
+      <mesh position={[0, 3.16, -7.965]}>
+        <boxGeometry args={[10.85, 0.042, 0.038]} />
+        <meshBasicMaterial color={cyan} transparent opacity={0.42} />
+      </mesh>
+      <mesh position={[0, 1.68, -7.965]}>
+        <boxGeometry args={[10.85, 0.038, 0.038]} />
+        <meshBasicMaterial color={red} transparent opacity={0.36} />
+      </mesh>
       {[
         { x: -4.75, title: "VAGAS LIVE", variant: "world" },
         { x: -2.2, title: "MATCH OPS", variant: "ops" },
@@ -1093,6 +1195,9 @@ function WallScreenArray() {
         { x: 4.75, title: "PERFIL", variant: "perfil" },
       ].map((screen) => (
         <group key={screen.title} position={[screen.x, 2.42, -8.0]}>
+          <RoundedBox args={[2.3, 1.25, 0.045]} radius={0.028} position={[0, 0, -0.075]}>
+            <meshStandardMaterial color="#1b222a" roughness={0.5} metalness={0.32} emissive="#06090c" emissiveIntensity={0.28} />
+          </RoundedBox>
           <PresentationScreen width={1.9} height={0.92} title={screen.title} variant={screen.variant} />
           <mesh position={[0, -0.58, 0.07]}>
             <boxGeometry args={[1.72, 0.035, 0.06]} />

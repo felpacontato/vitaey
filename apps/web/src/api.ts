@@ -29,6 +29,8 @@ type ApiJob = {
   requirements: string[];
   benefits: string[];
   posted_days_ago: number;
+  source?: string | null;
+  source_url?: string | null;
 };
 
 type ApiRecommendation = {
@@ -63,6 +65,8 @@ type VitaeyJobRow = {
   requirements: string[];
   benefits: string[];
   gaps: string[];
+  source?: string | null;
+  source_url?: string | null;
 };
 
 type VitaeyApplicationRow = {
@@ -140,11 +144,13 @@ export async function fetchRecommendedJobs(): Promise<Job[]> {
       .order("score", { ascending: false });
 
     if (error) throw error;
-    return (data as VitaeyJobRow[]).map(mapSupabaseJob);
+    return (data as VitaeyJobRow[]).filter(isProductionJob).map(mapSupabaseJob);
   }
 
   const recommendations = await request<ApiRecommendation[]>("/api/v1/recommendations");
-  return recommendations.map(({ job, score, gaps }) => mapJob(job, score, gaps));
+  return recommendations
+    .filter(({ job }) => isProductionJob(job))
+    .map(({ job, score, gaps }) => mapJob(job, score, gaps));
 }
 
 export async function fetchApplications(): Promise<Application[]> {
@@ -155,11 +161,11 @@ export async function fetchApplications(): Promise<Application[]> {
       .order("updated_at", { ascending: false });
 
     if (error) throw error;
-    return (data as VitaeyApplicationRow[]).map(mapApplication);
+    return (data as VitaeyApplicationRow[]).filter(isProductionApplication).map(mapApplication);
   }
 
   const applications = await request<ApiApplication[]>("/api/v1/applications");
-  return applications.map(mapApplication);
+  return applications.filter(isProductionApplication).map(mapApplication);
 }
 
 export async function fetchCandidateProfile(): Promise<CandidateProfile | null> {
@@ -401,6 +407,26 @@ function mapSupabaseJob(job: VitaeyJobRow): Job {
     description: job.description,
     gaps: job.gaps,
   };
+}
+
+function isProductionJob(job: Pick<VitaeyJobRow, "id" | "company" | "source" | "source_url">): boolean {
+  const source = job.source?.toLowerCase() ?? "";
+  const sourceUrl = job.source_url?.toLowerCase() ?? "";
+
+  return (
+    !["manual_demo", "demo", "mock", "sample"].includes(source) &&
+    !sourceUrl.includes("example.com") &&
+    !["job_001", "job_002", "job_003"].includes(job.id) &&
+    !isDemoCompany(job.company)
+  );
+}
+
+function isProductionApplication(application: Pick<ApiApplication, "id" | "job_id" | "company">): boolean {
+  return !application.id.startsWith("app_00") && !application.job_id.startsWith("job_00") && !isDemoCompany(application.company);
+}
+
+function isDemoCompany(company: string): boolean {
+  return ["nuvemlabs", "contaverde", "healthsync"].includes(company.trim().toLowerCase());
 }
 
 function mapJob(job: ApiJob, score: number, gaps: string[]): Job {

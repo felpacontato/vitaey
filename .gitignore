@@ -5,6 +5,7 @@ playwright-report/
 output/
 apps/web/output/
 .vercel/
+supabase/.temp/
 *.log
 *.tsbuildinfo
 .venv/

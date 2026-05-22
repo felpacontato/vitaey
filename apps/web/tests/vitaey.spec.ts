@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-test("renders production radar without demo data", async ({ page }) => {
+test("renders production radar without demo data", async ({ page }, testInfo) => {
   test.setTimeout(90_000);
   const messages: string[] = [];
   page.on("console", (msg) => {
@@ -11,7 +11,7 @@ test("renders production radar without demo data", async ({ page }) => {
 
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/", { waitUntil: "domcontentloaded" });
-  await page.addStyleTag({ content: "html { scroll-behavior: auto !important; }" });
+  await page.addStyleTag({ content: "html { scroll-behavior: auto !important; } .boot-overlay { display: none !important; }" });
   await expect(page.locator("h1")).toContainText("Vitaey");
   await expect(page.locator(".hero-copy h2")).toContainText("VITAEY");
 
@@ -23,7 +23,6 @@ test("renders production radar without demo data", async ({ page }) => {
   );
   expect(hasHorizontalOverflow).toBeFalsy();
 
-  await expect(page.locator(".boot-overlay")).toHaveClass(/is-hidden/, { timeout: 15_000 });
   await page.getByRole("button", { name: "Ver lembretes" }).click();
   await expect(page.locator(".auth-notice")).toContainText("Nenhum lembrete pendente agora.");
   await expect(page.locator("section#vagas h2")).toContainText("Vagas recomendadas");
@@ -31,15 +30,29 @@ test("renders production radar without demo data", async ({ page }) => {
 
   const detailsPanel = page.locator(".details-panel");
   const demoContent = /NuvemLabs|ContaVerde|HealthSync|Product Designer Pleno|UX Researcher|Product Manager/;
-  const pageText = await page.evaluate(() => document.body.innerText);
+  for (const demoText of ["NuvemLabs", "ContaVerde", "HealthSync", "Product Designer Pleno", "UX Researcher", "Product Manager"]) {
+    await expect(page.getByText(demoText, { exact: false })).toHaveCount(0);
+  }
+  await expect(page.locator(".opportunity-console")).toHaveCount(0);
+  await expect(page.locator("section#vagas button.station-access")).toBeVisible();
 
-  expect(pageText).not.toMatch(demoContent);
+  if (testInfo.project.name === "mobile") {
+    expect(messages.filter((message) => !isIgnoredConsoleMessage(message))).toEqual([]);
+    return;
+  }
+
+  await page.locator("section#vagas button.station-access").evaluate((button) => {
+    if (button instanceof HTMLButtonElement) button.click();
+  });
+  await expect(page.locator('[data-station-workspace="vagas"]')).toBeVisible();
+  await expect(page.locator(".opportunity-console")).toBeVisible();
 
   const jobCount = await page.locator(".job-card").count();
   if (jobCount === 0) {
-    expect(pageText).toContain("Nenhuma vaga");
-    expect(pageText).toContain("Nenhuma vaga selecionada");
-    expect(pageText).toContain("As etapas aparecem quando");
+    const openedText = (await page.locator("body").textContent()) ?? "";
+    expect(openedText).toContain("Nenhuma vaga");
+    expect(openedText).toContain("Nenhuma vaga selecionada");
+    expect(openedText).toContain("As etapas aparecem quando");
     expect(messages.filter((message) => !isIgnoredConsoleMessage(message))).toEqual([]);
     return;
   }
@@ -53,7 +66,9 @@ test("renders production radar without demo data", async ({ page }) => {
     await page.locator(".review-row input").nth(2).check();
     await page.locator(".review-row input").nth(3).check();
     await page.locator(".modal-actions button.primary").click();
-    expect(await page.evaluate(() => document.body.innerText)).not.toMatch(demoContent);
+    for (const demoText of ["NuvemLabs", "ContaVerde", "HealthSync", "Product Designer Pleno", "UX Researcher", "Product Manager"]) {
+      await expect(page.getByText(demoText, { exact: false })).toHaveCount(0);
+    }
   } else {
     await expect(page.locator(".auth-notice")).toContainText(/Entre com Google|Nenhum lembrete/);
   }

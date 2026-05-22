@@ -144,7 +144,7 @@ function OfficeWorld({ signalScore, jobCount, applicationCount, compact }: Offic
         <bufferGeometry>
           <bufferAttribute attach="attributes-position" args={[particles, 3]} />
         </bufferGeometry>
-        <pointsMaterial color={red} size={0.032} transparent opacity={0.58} depthWrite={false} />
+        <pointsMaterial color={red} size={0.026} transparent opacity={0.38} depthWrite={false} />
       </points>
       <mesh ref={ringRef} position={[-4.75, 1.9, 0.85]} rotation={[1.32, 0.18, 0.34]}>
         <torusGeometry args={[0.95 + signalScore / 240, 0.013, 10, 142]} />
@@ -187,7 +187,7 @@ function OfficeShell({
       </mesh>
       <mesh position={[0, -1.032, -1.32]} rotation={[-Math.PI / 2, 0, 0]}>
         <planeGeometry args={[15.2, 17.4]} />
-        <meshStandardMaterial map={carpetTexture} bumpMap={carpetTexture} bumpScale={0.026} color="#170809" roughness={0.88} metalness={0.02} transparent opacity={0.9} />
+        <meshStandardMaterial map={carpetTexture} bumpMap={carpetTexture} bumpScale={0.026} color="#140708" roughness={0.9} metalness={0.04} />
       </mesh>
       <mesh position={[0, 4.22, -1.15]}>
         <boxGeometry args={[18, 0.08, 22]} />
@@ -215,6 +215,7 @@ function OfficeShell({
           <meshStandardMaterial map={wallTexture} bumpMap={wallTexture} bumpScale={0.012} color="#0e1115" roughness={0.76} metalness={0.2} />
         </mesh>
       ))}
+      <SolidRoomEnvelope wallTexture={wallTexture} />
       {Array.from({ length: 9 }).map((_, index) => {
         const value = -4 + index;
         return (
@@ -240,6 +241,55 @@ function OfficeShell({
       <WallCladding />
       <ArchitecturalTrims />
       <OfficeBrandSign />
+    </group>
+  );
+}
+
+function SolidRoomEnvelope({ wallTexture }: { wallTexture: THREE.Texture }) {
+  return (
+    <group>
+      <mesh position={[0, 1.55, -8.62]} receiveShadow>
+        <boxGeometry args={[19.25, 5.88, 0.32]} />
+        <meshStandardMaterial
+          map={wallTexture}
+          bumpMap={wallTexture}
+          bumpScale={0.022}
+          color="#26323c"
+          roughness={0.68}
+          metalness={0.18}
+          emissive="#05090c"
+          emissiveIntensity={0.18}
+        />
+      </mesh>
+      {[-8.78, 8.78].map((x) => (
+        <mesh key={x} position={[x, 1.45, -1.1]} receiveShadow>
+          <boxGeometry args={[0.36, 5.7, 22.6]} />
+          <meshStandardMaterial
+            map={wallTexture}
+            bumpMap={wallTexture}
+            bumpScale={0.016}
+            color="#151c23"
+            roughness={0.74}
+            metalness={0.18}
+            emissive="#030607"
+            emissiveIntensity={0.12}
+          />
+        </mesh>
+      ))}
+      <mesh position={[0, -0.76, -8.36]} receiveShadow>
+        <boxGeometry args={[18.5, 0.42, 0.44]} />
+        <meshStandardMaterial color="#090a0c" roughness={0.5} metalness={0.46} />
+      </mesh>
+      <mesh position={[0, 3.96, -8.34]}>
+        <boxGeometry args={[18.5, 0.28, 0.38]} />
+        <meshStandardMaterial color="#111820" roughness={0.42} metalness={0.42} emissive="#020405" emissiveIntensity={0.14} />
+      </mesh>
+      {[-8.22, 8.22].map((x) => (
+        <mesh key={`corner-${x}`} position={[x, 1.54, -8.2]}>
+          <boxGeometry args={[0.38, 5.25, 0.5]} />
+          <meshStandardMaterial color="#0b0d10" roughness={0.46} metalness={0.5} emissive="#020304" emissiveIntensity={0.12} />
+        </mesh>
+      ))}
     </group>
   );
 }

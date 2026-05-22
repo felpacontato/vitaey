@@ -406,6 +406,8 @@ strong {
 
 .section-frame,
 .hero-surface,
+.station-gate,
+.station-workspace,
 .opportunity-console,
 .profile-workbench,
 .metrics,
@@ -681,6 +683,121 @@ strong {
   max-width: 620px;
 }
 
+.station-gate {
+  display: grid;
+  width: min(420px, calc(100vw - 48px));
+  gap: 14px;
+  align-self: center;
+  justify-self: end;
+  margin: 6vh 0 0 auto;
+  border: 1px solid var(--vt-red-line);
+  background:
+    linear-gradient(90deg, rgba(255, 42, 42, 0.08), transparent 1px),
+    linear-gradient(rgba(255, 255, 255, 0.035), transparent 1px),
+    rgba(3, 3, 4, 0.92);
+  background-size: 42px 100%, 100% 42px, auto;
+  padding: 22px;
+  box-shadow: var(--vt-shadow), var(--vt-red-shadow);
+}
+
+.station-gate strong {
+  color: var(--vt-ink);
+  font-family: var(--vt-font-display);
+  font-size: 2rem;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.station-gate p {
+  margin: 0;
+  color: var(--vt-muted);
+  font-family: var(--vt-font-ui);
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.station-gate.is-active {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.station-access,
+.workspace-dock button {
+  display: inline-flex;
+  min-height: 48px;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border: 1px solid var(--vt-red);
+  background: rgba(255, 42, 42, 0.11);
+  color: var(--vt-red);
+  font-family: var(--vt-font-ui);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.station-access:hover,
+.station-access:focus-visible,
+.workspace-dock button:hover,
+.workspace-dock button:focus-visible {
+  box-shadow: var(--vt-red-shadow);
+  outline: 0;
+}
+
+.station-access svg {
+  width: 15px;
+}
+
+.station-workspace {
+  position: fixed;
+  inset: 92px 38px auto 112px;
+  z-index: 45;
+  display: grid;
+  align-content: start;
+  gap: 14px;
+  width: auto;
+  max-height: calc(100vh - 126px);
+  margin: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  border: 1px solid var(--vt-line);
+  background:
+    linear-gradient(90deg, rgba(255, 42, 42, 0.045), transparent 1px),
+    linear-gradient(rgba(255, 255, 255, 0.026), transparent 1px),
+    #020203;
+  background-size: 46px 100%, 100% 46px, auto;
+  box-shadow: var(--vt-shadow), var(--vt-red-shadow);
+  padding: 14px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--vt-red) #050506;
+}
+
+.workspace-dock {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  border: 1px solid var(--vt-line);
+  background: #050506;
+  color: var(--vt-muted);
+  padding: 12px 14px;
+  font-family: var(--vt-font-ui);
+  font-size: 0.74rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.workspace-dock button {
+  min-height: 40px;
+  padding: 0 14px;
+}
+
 .section-intro h2,
 .details-panel h2,
 .panel-heading h2,
@@ -711,9 +828,8 @@ strong {
 .metrics,
 .workflow-strip {
   border: 1px solid var(--vt-line-soft);
-  background: linear-gradient(180deg, rgba(2, 2, 2, 0.68), rgba(2, 2, 2, 0.42));
+  background: #050506;
   box-shadow: var(--vt-shadow);
-  backdrop-filter: blur(16px);
 }
 
 .opportunity-console,
@@ -1605,6 +1721,28 @@ textarea:focus {
 
   .auth-notice {
     margin: 0 16px 24px;
+  }
+
+  .station-gate {
+    width: 100%;
+    justify-self: stretch;
+    margin: 20px 0 0;
+    padding: 18px;
+  }
+
+  .station-gate strong {
+    font-size: 1.65rem;
+  }
+
+  .station-workspace {
+    inset: 12px 12px auto 12px;
+    max-height: calc(100vh - 24px);
+    margin: 0;
+    padding: 10px;
+  }
+
+  .workspace-dock {
+    display: grid;
   }
 
   .opportunity-console,

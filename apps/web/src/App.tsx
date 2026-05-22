@@ -48,6 +48,8 @@ import {
 
 const OfficeScene = lazy(() => import("./OfficeScene").then((module) => ({ default: module.OfficeScene })));
 
+type StationId = "vagas" | "curriculo" | "kanban";
+
 const stages: Array<{ id: Stage; label: string }> = [
   { id: "saved", label: "Salvas" },
   { id: "prepared", label: "Preparadas" },
@@ -93,6 +95,7 @@ function App() {
   const [audit, setAudit] = useState<ApplicationAudit[]>([]);
   const [profileSaving, setProfileSaving] = useState(false);
   const [resumeUploading, setResumeUploading] = useState(false);
+  const [activeStation, setActiveStation] = useState<StationId | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -335,6 +338,10 @@ function App() {
     }
   }
 
+  function openStation(station: StationId) {
+    setActiveStation(station);
+  }
+
   return (
     <main className="experience-shell">
       <Suspense fallback={<div className="office-webgl office-webgl-fallback" aria-hidden="true" />}>
@@ -440,7 +447,20 @@ function App() {
           </p>
         </div>
 
-        <div className="opportunity-console">
+        <StationGate
+          id="vagas"
+          activeStation={activeStation}
+          station="Monitor Radar"
+          title="Acessar radar de vagas"
+          copy="Abra esta estação quando a câmera chegar aos monitores de vagas para filtrar oportunidades e revisar compatibilidade."
+          buttonLabel="Acessar vagas"
+          onOpen={openStation}
+        />
+
+        {activeStation === "vagas" ? (
+          <div className="station-workspace" data-station-workspace="vagas">
+            <WorkspaceDock title="Radar de vagas" onClose={() => setActiveStation(null)} />
+            <div className="opportunity-console">
           <div className="filters">
             <label className="search-field">
               <Search />
@@ -569,7 +589,9 @@ function App() {
               )}
             </aside>
           </div>
-        </div>
+            </div>
+          </div>
+        ) : null}
       </section>
 
       <section className="scene-section resume-section" id="curriculo" aria-label="Currículo e preferências">
@@ -579,7 +601,20 @@ function App() {
           <p>{sessionEmail ? sessionEmail : "Entre para manter o perfil sincronizado com segurança."}</p>
         </div>
 
-        <div className="profile-workbench">
+        <StationGate
+          id="curriculo"
+          activeStation={activeStation}
+          station="Tela Currículo"
+          title="Acessar edição de currículo"
+          copy="Quando a câmera se aproxima do monitor Currículo, abra a bancada para ajustar perfil, skills e preferências."
+          buttonLabel="Abrir currículo"
+          onOpen={openStation}
+        />
+
+        {activeStation === "curriculo" ? (
+          <div className="station-workspace" data-station-workspace="curriculo">
+            <WorkspaceDock title="Currículo e perfil" onClose={() => setActiveStation(null)} />
+            <div className="profile-workbench">
           <div className="profile-editor">
             <div className="panel-heading compact-heading">
               <div>
@@ -688,7 +723,9 @@ function App() {
               ))}
             </div>
           </div>
-        </div>
+            </div>
+          </div>
+        ) : null}
       </section>
 
       <section className="scene-section pipeline-section" id="kanban" aria-label="Pipeline de candidaturas">
@@ -702,7 +739,20 @@ function App() {
           </p>
         </div>
 
-        <div className="metrics" aria-label="Indicadores do candidato">
+        <StationGate
+          id="kanban"
+          activeStation={activeStation}
+          station="Monitor Perfil / Pipeline"
+          title="Acessar pipeline"
+          copy="Na mesa do monitor Perfil, abra a estação para acompanhar candidaturas, etapas e histórico."
+          buttonLabel="Abrir pipeline"
+          onOpen={openStation}
+        />
+
+        {activeStation === "kanban" ? (
+          <div className="station-workspace" data-station-workspace="kanban">
+            <WorkspaceDock title="Pipeline de candidaturas" onClose={() => setActiveStation(null)} />
+            <div className="metrics" aria-label="Indicadores do candidato">
           <Metric icon={<BriefcaseBusiness />} label="Vagas salvas" value={savedCount} tone="mint" />
           <Metric icon={<Layers3 />} label="Candidaturas ativas" value={activeCount} tone="blue" />
           <Metric icon={<Clock3 />} label="Entrevistas" value={interviewCount} tone="violet" />
@@ -735,7 +785,9 @@ function App() {
               ))}
             </div>
           ))}
-        </div>
+            </div>
+          </div>
+        ) : null}
       </section>
 
       {applyJob ? (
@@ -769,6 +821,47 @@ function App() {
         </div>
       ) : null}
     </main>
+  );
+}
+
+function StationGate({
+  id,
+  activeStation,
+  station,
+  title,
+  copy,
+  buttonLabel,
+  onOpen,
+}: {
+  id: StationId;
+  activeStation: StationId | null;
+  station: string;
+  title: string;
+  copy: string;
+  buttonLabel: string;
+  onOpen: (station: StationId) => void;
+}) {
+  const isActive = activeStation === id;
+
+  return (
+    <div className={`station-gate ${isActive ? "is-active" : ""}`}>
+      <span className="section-kicker">{station}</span>
+      <strong>{title}</strong>
+      <p>{copy}</p>
+      <button className="station-access" type="button" onClick={() => onOpen(id)} aria-expanded={isActive}>
+        {isActive ? "Estação aberta" : buttonLabel}
+        <ArrowRight />
+      </button>
+    </div>
+  );
+}
+
+function WorkspaceDock({ title, onClose }: { title: string; onClose: () => void }) {
+  return (
+    <div className="workspace-dock">
+      <span>{title}</span>
+      <button type="button" onClick={onClose}>Voltar para sala</button>
+    </div>
   );
 }
 

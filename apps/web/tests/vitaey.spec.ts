@@ -66,5 +66,9 @@ test("renders production radar without demo data", async ({ page }) => {
 });
 
 function isIgnoredConsoleMessage(message: string) {
-  return message.includes("Failed to load resource") || message.includes("GL Driver Message");
+  return (
+    message.includes("Failed to load resource") ||
+    message.includes("GL Driver Message") ||
+    message.includes("THREE.Clock: This module has been deprecated")
+  );
 }

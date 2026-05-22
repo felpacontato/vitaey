@@ -338,7 +338,7 @@ function App() {
   return (
     <main className="experience-shell">
       <Suspense fallback={<div className="office-webgl office-webgl-fallback" aria-hidden="true" />}>
-        <OfficeScene signalScore={bestMatch || 72} jobCount={jobs.length} applicationCount={applications.length} />
+        <OfficeScene signalScore={bestMatch} jobCount={jobs.length} applicationCount={applications.length} />
       </Suspense>
       <BootOverlay />
 
@@ -403,8 +403,8 @@ function App() {
 
         <div className="hero-surface">
           <div className="signal-readout">
-            <strong>{bestMatch ? `${bestMatch}%` : "Fonte"}</strong>
-            <span>{bestMatch ? "melhor match disponível" : "aguardando vagas"}</span>
+            <strong>{bestMatch ? `${bestMatch}%` : "Sem match"}</strong>
+            <span>{bestMatch ? "melhor match disponível" : "aguardando vagas reais"}</span>
           </div>
           <div className="career-snapshot" aria-label="Resumo do progresso">
             <span>
@@ -412,7 +412,7 @@ function App() {
               Currículo
             </span>
             <span>
-              <strong>{filteredJobs.length || "Fonte pendente"}</strong>
+              <strong>{filteredJobs.length}</strong>
               Vagas no radar
             </span>
             <span>

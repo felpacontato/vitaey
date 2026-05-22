@@ -469,15 +469,24 @@ function DocumentTray({ position }: { position: [number, number, number] }) {
 }
 
 function WallDashboard({ signalScore }: { signalScore: number }) {
+  const displayedScore = Math.max(0, Math.min(100, signalScore));
+  const hasSignal = displayedScore > 0;
+
   return (
     <group position={[-5.95, 1.48, -4.4]} rotation={[0, 0.58, 0]}>
-      <PresentationScreen width={3.15} height={1.8} title="CURRICULO SCORE" variant="curriculo" />
+      <PresentationScreen
+        width={3.15}
+        height={1.8}
+        title="CURRICULO"
+        variant="curriculo"
+        metric={hasSignal ? `${displayedScore}%` : "SEM MATCH"}
+      />
       <mesh position={[0, -1.12, 0.02]}>
-        <torusGeometry args={[0.55 + signalScore / 360, 0.012, 10, 120]} />
+        <torusGeometry args={[0.55 + displayedScore / 360, 0.012, 10, 120]} />
         <meshBasicMaterial color={red} transparent opacity={0.42} wireframe />
       </mesh>
-      <Text position={[-0.45, -1.15, 0.05]} fontSize={0.18} color="#fff" anchorX="left">
-        {signalScore}%
+      <Text position={[-0.45, -1.15, 0.05]} fontSize={hasSignal ? 0.18 : 0.12} color="#fff" anchorX="left">
+        {hasSignal ? `${displayedScore}%` : "SEM MATCH"}
       </Text>
     </group>
   );
@@ -489,14 +498,16 @@ function PresentationScreen({
   title,
   variant,
   position = [0, 0, 0],
+  metric,
 }: {
   width: number;
   height: number;
   title: string;
   variant: string;
   position?: [number, number, number];
+  metric?: string;
 }) {
-  const texture = useMemo(() => makeScreenTexture(variant, title), [variant, title]);
+  const texture = useMemo(() => makeScreenTexture(variant, title, metric), [variant, title, metric]);
   return (
     <group position={position}>
       <RoundedBox args={[width + 0.18, height + 0.18, 0.075]} radius={0.045} smoothness={8}>
@@ -598,7 +609,7 @@ function PlantCluster({ position }: { position: [number, number, number] }) {
   );
 }
 
-function makeScreenTexture(variant: string, title = "VITAEY") {
+function makeScreenTexture(variant: string, title = "VITAEY", metric?: string) {
   const canvas = document.createElement("canvas");
   canvas.width = 1024;
   canvas.height = 576;
@@ -637,7 +648,7 @@ function makeScreenTexture(variant: string, title = "VITAEY") {
   ctx.font = "700 74px Georgia";
   ctx.fillText(variant === "radar" ? "RADAR" : variant === "pipeline" ? "PIPELINE" : "MATCH", 54, 152);
 
-  drawScreenVariant(ctx, variant);
+  drawScreenVariant(ctx, variant, metric);
 
   const texture = new THREE.CanvasTexture(canvas);
   texture.colorSpace = THREE.SRGBColorSpace;
@@ -646,7 +657,7 @@ function makeScreenTexture(variant: string, title = "VITAEY") {
   return texture;
 }
 
-function drawScreenVariant(ctx: CanvasRenderingContext2D, variant: string) {
+function drawScreenVariant(ctx: CanvasRenderingContext2D, variant: string, metric?: string) {
   ctx.lineWidth = 3;
   if (variant === "pipeline") {
     ["SALVA", "REVISA", "ENVIA", "ENTREV", "OFERTA"].forEach((label, index) => {
@@ -677,8 +688,8 @@ function drawScreenVariant(ctx: CanvasRenderingContext2D, variant: string) {
     ctx.arc(842, 316, 82, -Math.PI * 0.35, Math.PI * 1.35);
     ctx.stroke();
     ctx.fillStyle = "#f3f0ea";
-    ctx.font = "700 54px Georgia";
-    ctx.fillText("95%", 790, 334);
+    ctx.font = metric && metric.length > 4 ? "700 32px Arial" : "700 54px Georgia";
+    ctx.fillText(metric ?? "SEM MATCH", metric && metric.length > 4 ? 752 : 790, 334);
     return;
   }
 

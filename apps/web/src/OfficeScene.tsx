@@ -135,6 +135,7 @@ function OfficeWorld({ signalScore, jobCount, applicationCount, compact }: Offic
       {!compact ? <ServerRack /> : null}
       {!compact ? <ExecutiveShelving /> : null}
       {!compact ? <OfficeMicroDetails /> : null}
+      {!compact ? <CommandRoomDetails /> : null}
       {!compact ? <PlantCluster position={[-6.9, -0.52, -4.9]} /> : null}
       {!compact ? <PlantCluster position={[6.5, -0.52, -4.7]} /> : null}
 
@@ -240,6 +241,11 @@ function ShadowSystem() {
       <ShadowBlob position={[0, -0.996, 3.25]} scale={[1.25, 0.55, 1]} opacity={0.24} />
       <ShadowBlob position={[-6.95, -0.996, -6.75]} scale={[1.2, 0.7, 1]} opacity={0.23} />
       <ShadowBlob position={[6.95, -0.996, -6.75]} scale={[1.2, 0.7, 1]} opacity={0.23} />
+      <ShadowBlob position={[-7.15, -0.996, -0.15]} scale={[0.62, 0.48, 1]} opacity={0.24} />
+      <ShadowBlob position={[-7.05, -0.996, 1.55]} scale={[0.72, 0.58, 1]} opacity={0.22} />
+      <ShadowBlob position={[7.1, -0.996, 1.75]} scale={[1.2, 0.52, 1]} opacity={0.26} />
+      <ShadowBlob position={[-1.8, -0.996, -5.9]} scale={[1.5, 0.5, 1]} opacity={0.22} />
+      <ShadowBlob position={[1.8, -0.996, -5.9]} scale={[1.5, 0.5, 1]} opacity={0.22} />
     </group>
   );
 }
@@ -1060,6 +1066,306 @@ function OfficeMicroDetails() {
       <FloatingGlassBoards />
       <CableRuns />
       <ReceptionPedestal />
+    </group>
+  );
+}
+
+function CommandRoomDetails() {
+  return (
+    <group>
+      <WallScreenArray />
+      <SideConsoleWall />
+      <UtilityZone />
+      <CeilingServiceGrid />
+      <SafetyFloorMarks />
+      <CareerHologram />
+    </group>
+  );
+}
+
+function WallScreenArray() {
+  return (
+    <group>
+      {[
+        { x: -4.75, title: "VAGAS LIVE", variant: "world" },
+        { x: -2.2, title: "MATCH OPS", variant: "ops" },
+        { x: 2.2, title: "CANDIDATURAS", variant: "pipeline" },
+        { x: 4.75, title: "PERFIL", variant: "perfil" },
+      ].map((screen) => (
+        <group key={screen.title} position={[screen.x, 2.42, -8.0]}>
+          <PresentationScreen width={1.9} height={0.92} title={screen.title} variant={screen.variant} />
+          <mesh position={[0, -0.58, 0.07]}>
+            <boxGeometry args={[1.72, 0.035, 0.06]} />
+            <meshStandardMaterial color="#08090b" roughness={0.42} metalness={0.64} />
+          </mesh>
+        </group>
+      ))}
+      {[-3.45, -1.15, 1.15, 3.45].map((x, index) => (
+        <group key={x} position={[x, 1.64, -8.02]}>
+          <VentGrille width={0.8} height={0.34} color={index % 2 ? cyan : red} />
+        </group>
+      ))}
+    </group>
+  );
+}
+
+function VentGrille({ width, height, color }: { width: number; height: number; color: string }) {
+  return (
+    <group>
+      <RoundedBox args={[width, height, 0.035]} radius={0.02}>
+        <meshStandardMaterial color="#060708" roughness={0.52} metalness={0.5} />
+      </RoundedBox>
+      {Array.from({ length: 6 }).map((_, index) => (
+        <mesh key={index} position={[0, height / 2 - 0.07 - index * (height / 7), 0.028]}>
+          <boxGeometry args={[width - 0.16, 0.012, 0.012]} />
+          <meshBasicMaterial color={index % 2 ? "#303740" : color} transparent opacity={index % 2 ? 0.48 : 0.36} />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
+function SideConsoleWall() {
+  return (
+    <group>
+      {[-2.25, 0, 2.25].map((x, index) => (
+        <group key={x} position={[x, -0.42, -6.62]}>
+          <RoundedBox args={[1.95, 0.72, 0.52]} radius={0.035}>
+            <meshStandardMaterial color="#070708" roughness={0.46} metalness={0.52} />
+          </RoundedBox>
+          <group position={[0, 0.44, 0.06]} rotation={[-0.44, 0, 0]}>
+            <PresentationScreen width={1.42} height={0.38} title={index === 1 ? "TRIAGEM" : "QUEUE"} variant={index === 1 ? "ops" : "radar"} />
+          </group>
+          <ConsoleButtons offset={index} />
+        </group>
+      ))}
+      {[-6.95, 6.95].map((x) => (
+        <group key={x} position={[x, -0.54, -3.9]} rotation={[0, x < 0 ? 0.32 : -0.32, 0]}>
+          <RoundedBox args={[1.18, 0.44, 0.44]} radius={0.035}>
+            <meshStandardMaterial color="#070708" roughness={0.44} metalness={0.56} />
+          </RoundedBox>
+          <mesh position={[0, 0.28, 0.08]} rotation={[-0.52, 0, 0]}>
+            <boxGeometry args={[0.94, 0.032, 0.32]} />
+            <meshBasicMaterial color={x < 0 ? cyan : red} transparent opacity={0.32} />
+          </mesh>
+        </group>
+      ))}
+    </group>
+  );
+}
+
+function ConsoleButtons({ offset }: { offset: number }) {
+  return (
+    <group position={[-0.58, 0.4, 0.28]} rotation={[-0.44, 0, 0]}>
+      {Array.from({ length: 7 }).map((_, index) => (
+        <mesh key={index} position={[index * 0.18, 0, 0]}>
+          <boxGeometry args={[0.09, 0.018, 0.05]} />
+          <meshBasicMaterial color={(index + offset) % 3 === 0 ? red : (index + offset) % 3 === 1 ? cyan : "#353a42"} transparent opacity={0.82} />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
+function UtilityZone() {
+  return (
+    <group>
+      <StorageCabinet position={[-7.55, 0.25, 1.58]} rotation={[0, Math.PI / 2, 0]} label="RH" />
+      <StorageCabinet position={[7.55, 0.25, 1.72]} rotation={[0, -Math.PI / 2, 0]} label="OPS" />
+      <StorageCabinet position={[5.86, 0.25, -7.15]} rotation={[0, -0.04, 0]} label="DATA" wide />
+      <WaterCooler position={[-7.42, -0.35, -0.18]} rotation={[0, Math.PI / 2, 0]} />
+      <MaintenancePanel position={[-7.92, 1.02, -2.05]} rotation={[0, Math.PI / 2, 0]} />
+      <MaintenancePanel position={[7.92, 1.02, -2.05]} rotation={[0, -Math.PI / 2, 0]} mirror />
+    </group>
+  );
+}
+
+function StorageCabinet({
+  position,
+  rotation,
+  label,
+  wide = false,
+}: {
+  position: [number, number, number];
+  rotation: [number, number, number];
+  label: string;
+  wide?: boolean;
+}) {
+  const width = wide ? 1.35 : 0.82;
+  return (
+    <group position={position} rotation={rotation}>
+      <RoundedBox args={[width, 1.78, 0.46]} radius={0.035}>
+        <meshStandardMaterial color="#08090b" roughness={0.52} metalness={0.48} />
+      </RoundedBox>
+      <mesh position={[0, 0.83, 0.245]}>
+        <boxGeometry args={[width - 0.12, 0.035, 0.018]} />
+        <meshBasicMaterial color={red} transparent opacity={0.48} />
+      </mesh>
+      <mesh position={[0, -0.08, 0.252]}>
+        <boxGeometry args={[0.018, 1.52, 0.016]} />
+        <meshBasicMaterial color="#30343a" transparent opacity={0.58} />
+      </mesh>
+      {[-0.36, 0, 0.36].map((y, index) => (
+        <mesh key={y} position={[0, y, 0.258]}>
+          <boxGeometry args={[width - 0.2, 0.018, 0.014]} />
+          <meshBasicMaterial color={index % 2 ? cyan : "#343941"} transparent opacity={index % 2 ? 0.42 : 0.62} />
+        </mesh>
+      ))}
+      {[-0.16, 0.16].map((x) => (
+        <mesh key={x} position={[x, 0.03, 0.268]}>
+          <boxGeometry args={[0.025, 0.46, 0.018]} />
+          <meshStandardMaterial color="#0f1115" roughness={0.36} metalness={0.68} />
+        </mesh>
+      ))}
+      <Text position={[-width / 2 + 0.1, -0.82, 0.27]} fontSize={0.07} color={red} anchorX="left">
+        {label}
+      </Text>
+    </group>
+  );
+}
+
+function WaterCooler({ position, rotation }: { position: [number, number, number]; rotation: [number, number, number] }) {
+  return (
+    <group position={position} rotation={rotation}>
+      <RoundedBox args={[0.42, 0.92, 0.38]} radius={0.055} position={[0, 0.03, 0]}>
+        <meshStandardMaterial color="#d9dde0" roughness={0.35} metalness={0.16} />
+      </RoundedBox>
+      <mesh position={[0, 0.68, 0]}>
+        <cylinderGeometry args={[0.19, 0.16, 0.46, 24]} />
+        <meshPhysicalMaterial color={cyan} transparent opacity={0.48} roughness={0.08} metalness={0.02} transmission={0.22} />
+      </mesh>
+      <mesh position={[0, 0.96, 0]}>
+        <sphereGeometry args={[0.18, 18, 18, 0, Math.PI * 2, 0, Math.PI * 0.58]} />
+        <meshPhysicalMaterial color={cyan} transparent opacity={0.38} roughness={0.06} metalness={0.02} transmission={0.24} />
+      </mesh>
+      <mesh position={[0, 0.24, 0.2]}>
+        <boxGeometry args={[0.28, 0.12, 0.035]} />
+        <meshStandardMaterial color="#111317" roughness={0.4} metalness={0.52} />
+      </mesh>
+      {[-0.07, 0.07].map((x, index) => (
+        <mesh key={x} position={[x, 0.16, 0.225]}>
+          <cylinderGeometry args={[0.022, 0.022, 0.06, 10]} />
+          <meshBasicMaterial color={index === 0 ? cyan : red} transparent opacity={0.82} />
+        </mesh>
+      ))}
+      <mesh position={[0.24, -0.12, 0.03]}>
+        <cylinderGeometry args={[0.045, 0.04, 0.26, 16]} />
+        <meshStandardMaterial color="#f1f4f4" roughness={0.45} metalness={0.04} />
+      </mesh>
+      <mesh position={[0.24, 0.04, 0.03]}>
+        <cylinderGeometry args={[0.047, 0.045, 0.02, 16]} />
+        <meshBasicMaterial color="#f1f4f4" transparent opacity={0.9} />
+      </mesh>
+    </group>
+  );
+}
+
+function MaintenancePanel({
+  position,
+  rotation,
+  mirror = false,
+}: {
+  position: [number, number, number];
+  rotation: [number, number, number];
+  mirror?: boolean;
+}) {
+  return (
+    <group position={position} rotation={rotation}>
+      <RoundedBox args={[0.5, 1.12, 0.04]} radius={0.025}>
+        <meshStandardMaterial color="#07080a" roughness={0.5} metalness={0.48} />
+      </RoundedBox>
+      {Array.from({ length: 5 }).map((_, index) => (
+        <mesh key={index} position={[0, 0.38 - index * 0.17, 0.035]}>
+          <boxGeometry args={[0.36 - (index % 2) * 0.08, 0.018, 0.012]} />
+          <meshBasicMaterial color={(index + (mirror ? 1 : 0)) % 2 ? cyan : red} transparent opacity={0.55} />
+        </mesh>
+      ))}
+      <mesh position={[0.18, -0.42, 0.038]}>
+        <sphereGeometry args={[0.028, 10, 10]} />
+        <meshBasicMaterial color={mirror ? red : cyan} />
+      </mesh>
+    </group>
+  );
+}
+
+function CeilingServiceGrid() {
+  return (
+    <group>
+      <mesh position={[0, 4.105, -4.75]}>
+        <boxGeometry args={[3.8, 0.028, 0.9]} />
+        <meshStandardMaterial color="#050607" roughness={0.52} metalness={0.34} />
+      </mesh>
+      {Array.from({ length: 14 }).map((_, index) => (
+        <mesh key={index} position={[-1.78 + index * 0.275, 4.08, -4.75]}>
+          <boxGeometry args={[0.035, 0.018, 0.84]} />
+          <meshBasicMaterial color="#2d333a" transparent opacity={0.48} />
+        </mesh>
+      ))}
+      <mesh position={[0, 4.075, 0.9]} rotation={[0, 0, 0]}>
+        <torusGeometry args={[1.65, 0.028, 8, 96]} />
+        <meshBasicMaterial color={cyan} transparent opacity={0.42} />
+      </mesh>
+      <mesh position={[0, 4.065, 0.9]} rotation={[0, 0, 0]}>
+        <torusGeometry args={[1.25, 0.012, 8, 96]} />
+        <meshBasicMaterial color={red} transparent opacity={0.26} />
+      </mesh>
+    </group>
+  );
+}
+
+function SafetyFloorMarks() {
+  return (
+    <group>
+      {[-6.95, 6.95].map((x) => (
+        <group key={x} position={[x, -0.972, 3.28]} rotation={[-Math.PI / 2, 0, x < 0 ? -0.18 : 0.18]}>
+          {Array.from({ length: 7 }).map((_, index) => (
+            <mesh key={index} position={[-0.42 + index * 0.14, 0, 0]}>
+              <planeGeometry args={[0.09, 0.42]} />
+              <meshBasicMaterial color={index % 2 ? "#101114" : "#e9eef0"} transparent opacity={0.38} side={THREE.DoubleSide} />
+            </mesh>
+          ))}
+        </group>
+      ))}
+      <mesh position={[0, -0.97, 2.05]} rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[1.55, 1.58, 96]} />
+        <meshBasicMaterial color={cyan} transparent opacity={0.25} side={THREE.DoubleSide} />
+      </mesh>
+      <mesh position={[0, -0.969, 2.05]} rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[1.05, 1.07, 96]} />
+        <meshBasicMaterial color={red} transparent opacity={0.22} side={THREE.DoubleSide} />
+      </mesh>
+    </group>
+  );
+}
+
+function CareerHologram() {
+  return (
+    <group position={[-5.9, 0.18, -1.45]} rotation={[0, 0.38, 0]}>
+      <RoundedBox args={[0.78, 0.16, 0.78]} radius={0.06}>
+        <meshStandardMaterial color="#060708" roughness={0.34} metalness={0.64} />
+      </RoundedBox>
+      <mesh position={[0, 0.13, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[0.22, 0.36, 48]} />
+        <meshBasicMaterial color={cyan} transparent opacity={0.34} side={THREE.DoubleSide} />
+      </mesh>
+      <Float speed={1.1} floatIntensity={0.16} rotationIntensity={0.28}>
+        <group position={[0, 0.68, 0]}>
+          <mesh>
+            <sphereGeometry args={[0.36, 28, 18]} />
+            <meshBasicMaterial color={cyan} transparent opacity={0.12} wireframe />
+          </mesh>
+          {[0, Math.PI / 4, Math.PI / 2].map((angle) => (
+            <mesh key={angle} rotation={[angle, angle * 0.35, 0]}>
+              <torusGeometry args={[0.37, 0.004, 6, 72]} />
+              <meshBasicMaterial color={cyan} transparent opacity={0.62} />
+            </mesh>
+          ))}
+          <mesh rotation={[0, 0.6, 0]}>
+            <torusGeometry args={[0.18, 0.003, 6, 48]} />
+            <meshBasicMaterial color={red} transparent opacity={0.72} />
+          </mesh>
+        </group>
+      </Float>
     </group>
   );
 }

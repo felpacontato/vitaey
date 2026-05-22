@@ -118,12 +118,14 @@ function OfficeWorld({ signalScore, jobCount, applicationCount, compact }: Offic
 
   return (
     <group ref={rootRef}>
-      <ambientLight intensity={0.24} color="#9fb5c5" />
-      <directionalLight position={[-5, 8, 7]} intensity={1.55} color="#b6e8ff" />
+      <ambientLight intensity={0.2} color="#9fb5c5" />
+      <directionalLight position={[-5, 8, 7]} intensity={1.45} color="#b6e8ff" />
+      {!compact ? <spotLight position={[0, 4.0, 3.6]} angle={0.62} penumbra={0.86} intensity={22} color="#ff4a3b" distance={15} /> : null}
       <pointLight position={[4.8, 2.4, -1.5]} intensity={28} distance={16} color={red} />
       <pointLight position={[-5.7, 3.0, -4.2]} intensity={15} distance={16} color={cyan} />
 
       <OfficeShell floorTexture={floorTexture} wallTexture={wallTexture} carpetTexture={carpetTexture} />
+      {!compact ? <ShadowSystem /> : null}
       <CeilingSystem />
       <MeetingZone deskTexture={deskTexture} fabricTexture={fabricTexture} />
       <DeskCluster deskTexture={deskTexture} fabricTexture={fabricTexture} compact={compact} />
@@ -180,11 +182,11 @@ function OfficeShell({
     <group>
       <mesh position={[0, -1.08, -1.15]} receiveShadow>
         <boxGeometry args={[18, 0.08, 22]} />
-        <meshStandardMaterial map={floorTexture} color="#121317" roughness={0.62} metalness={0.18} />
+        <meshStandardMaterial map={floorTexture} bumpMap={floorTexture} bumpScale={0.018} color="#121317" roughness={0.66} metalness={0.14} />
       </mesh>
       <mesh position={[0, -1.032, -1.32]} rotation={[-Math.PI / 2, 0, 0]}>
         <planeGeometry args={[15.2, 17.4]} />
-        <meshStandardMaterial map={carpetTexture} color="#170809" roughness={0.82} metalness={0.02} transparent opacity={0.88} />
+        <meshStandardMaterial map={carpetTexture} bumpMap={carpetTexture} bumpScale={0.026} color="#170809" roughness={0.88} metalness={0.02} transparent opacity={0.9} />
       </mesh>
       <mesh position={[0, 4.22, -1.15]}>
         <boxGeometry args={[18, 0.08, 22]} />
@@ -192,12 +194,12 @@ function OfficeShell({
       </mesh>
       <mesh position={[0, 1.5, -8.2]}>
         <boxGeometry args={[18, 5.25, 0.08]} />
-        <meshStandardMaterial map={wallTexture} color="#050506" roughness={0.74} metalness={0.26} />
+        <meshStandardMaterial map={wallTexture} bumpMap={wallTexture} bumpScale={0.012} color="#050506" roughness={0.78} metalness={0.2} />
       </mesh>
       {[-8.22, 8.22].map((x) => (
         <mesh key={x} position={[x, 1.5, -1.15]}>
           <boxGeometry args={[0.08, 5.25, 22]} />
-          <meshStandardMaterial map={wallTexture} color="#050506" roughness={0.74} metalness={0.26} />
+          <meshStandardMaterial map={wallTexture} bumpMap={wallTexture} bumpScale={0.012} color="#050506" roughness={0.78} metalness={0.2} />
         </mesh>
       ))}
       {Array.from({ length: 9 }).map((_, index) => {
@@ -221,7 +223,79 @@ function OfficeShell({
       </mesh>
       <FloorInlays />
       <WallCladding />
+      <ArchitecturalTrims />
       <OfficeBrandSign />
+    </group>
+  );
+}
+
+function ShadowSystem() {
+  return (
+    <group>
+      <ShadowBlob position={[0, -0.997, -3.05]} scale={[4.8, 1.4, 1]} opacity={0.26} />
+      {[-4.85, -1.65, 1.65, 4.85].map((x, index) => (
+        <ShadowBlob key={x} position={[x, -0.996, 0.86]} scale={[1.75, 0.82, 1]} opacity={index % 2 ? 0.24 : 0.28} />
+      ))}
+      <ShadowBlob position={[6.9, -0.996, -1.35]} scale={[0.8, 1.25, 1]} opacity={0.3} />
+      <ShadowBlob position={[0, -0.996, 3.25]} scale={[1.25, 0.55, 1]} opacity={0.24} />
+      <ShadowBlob position={[-6.95, -0.996, -6.75]} scale={[1.2, 0.7, 1]} opacity={0.23} />
+      <ShadowBlob position={[6.95, -0.996, -6.75]} scale={[1.2, 0.7, 1]} opacity={0.23} />
+    </group>
+  );
+}
+
+function ShadowBlob({
+  position,
+  scale,
+  opacity,
+}: {
+  position: [number, number, number];
+  scale: [number, number, number];
+  opacity: number;
+}) {
+  return (
+    <mesh position={position} rotation={[-Math.PI / 2, 0, 0]} scale={scale}>
+      <circleGeometry args={[1, 48]} />
+      <meshBasicMaterial color="#000000" transparent opacity={opacity} depthWrite={false} />
+    </mesh>
+  );
+}
+
+function ArchitecturalTrims() {
+  return (
+    <group>
+      <mesh position={[0, -0.62, -8.06]}>
+        <boxGeometry args={[17.4, 0.18, 0.13]} />
+        <meshStandardMaterial color="#090809" roughness={0.48} metalness={0.48} />
+      </mesh>
+      <mesh position={[0, 3.72, -8.06]}>
+        <boxGeometry args={[17.4, 0.12, 0.13]} />
+        <meshStandardMaterial color="#090809" roughness={0.42} metalness={0.54} />
+      </mesh>
+      {[-8.08, 8.08].map((x) => (
+        <group key={x}>
+          <mesh position={[x, -0.62, -1.15]}>
+            <boxGeometry args={[0.13, 0.18, 21.2]} />
+            <meshStandardMaterial color="#090809" roughness={0.48} metalness={0.48} />
+          </mesh>
+          <mesh position={[x, 3.72, -1.15]}>
+            <boxGeometry args={[0.13, 0.12, 21.2]} />
+            <meshStandardMaterial color="#090809" roughness={0.42} metalness={0.54} />
+          </mesh>
+        </group>
+      ))}
+      {[-5.9, -2.95, 0, 2.95, 5.9].map((x, index) => (
+        <group key={x} position={[x, 0.98, -8.0]}>
+          <mesh>
+            <boxGeometry args={[0.06, 3.2, 0.18]} />
+            <meshStandardMaterial color="#070708" roughness={0.4} metalness={0.6} />
+          </mesh>
+          <mesh position={[0, 0, 0.115]}>
+            <boxGeometry args={[0.018, 2.88, 0.018]} />
+            <meshBasicMaterial color={index % 2 ? cyan : red} transparent opacity={0.22} />
+          </mesh>
+        </group>
+      ))}
     </group>
   );
 }
@@ -342,6 +416,20 @@ function OfficeBrandSign() {
 function CeilingSystem() {
   return (
     <group>
+      {[-6.0, -3.0, 0, 3.0, 6.0].map((x) =>
+        [-5.6, -2.5, 0.6].map((z) => (
+          <group key={`${x}-${z}`} position={[x, 4.145, z]}>
+            <mesh>
+              <boxGeometry args={[1.05, 0.028, 1.05]} />
+              <meshStandardMaterial color="#060708" roughness={0.62} metalness={0.28} />
+            </mesh>
+            <mesh position={[0, -0.02, 0]}>
+              <boxGeometry args={[0.92, 0.012, 0.018]} />
+              <meshBasicMaterial color="#20242a" transparent opacity={0.5} />
+            </mesh>
+          </group>
+        )),
+      )}
       {[-5.6, -1.85, 1.85, 5.6].map((x, index) => (
         <group key={x} position={[x, 3.92, -2.2 + (index % 2) * 0.6]}>
           <mesh>
@@ -349,6 +437,34 @@ function CeilingSystem() {
             <meshBasicMaterial color={cyan} transparent opacity={0.72} />
           </mesh>
           <pointLight color={cyan} intensity={index % 2 ? 4.5 : 3.4} distance={5.5} />
+        </group>
+      ))}
+      <mesh position={[0, 3.86, 1.7]}>
+        <boxGeometry args={[12.5, 0.035, 0.08]} />
+        <meshStandardMaterial color="#060607" roughness={0.44} metalness={0.64} />
+      </mesh>
+      {[-5.6, -2.8, 0, 2.8, 5.6].map((x) => (
+        <group key={x} position={[x, 3.78, 1.72]}>
+          <mesh rotation={[Math.PI / 2, 0, 0]}>
+            <torusGeometry args={[0.07, 0.012, 8, 18]} />
+            <meshStandardMaterial color="#08090b" roughness={0.42} metalness={0.7} />
+          </mesh>
+          <mesh position={[0, -0.18, 0]}>
+            <cylinderGeometry args={[0.01, 0.01, 0.34, 8]} />
+            <meshStandardMaterial color="#08090b" roughness={0.42} metalness={0.7} />
+          </mesh>
+        </group>
+      ))}
+      {[-4.2, 4.2].map((x) => (
+        <group key={x} position={[x, 3.78, -6.2]}>
+          <mesh rotation={[Math.PI / 2, 0, 0]}>
+            <cylinderGeometry args={[0.16, 0.16, 0.025, 22]} />
+            <meshStandardMaterial color="#11141a" roughness={0.54} metalness={0.46} />
+          </mesh>
+          <mesh position={[0, -0.014, 0]} rotation={[Math.PI / 2, 0, 0]}>
+            <ringGeometry args={[0.05, 0.11, 20]} />
+            <meshBasicMaterial color={red} transparent opacity={0.28} side={THREE.DoubleSide} />
+          </mesh>
         </group>
       ))}
       {[-6.8, 6.8].map((x) => (
@@ -502,13 +618,27 @@ function Monitor({ position, variant }: { position: [number, number, number]; va
   const texture = useMemo(() => makeScreenTexture(variant), [variant]);
   return (
     <group position={position}>
-      <RoundedBox args={[1.12, 0.72, 0.055]} radius={0.035} smoothness={8}>
+      <RoundedBox args={[1.12, 0.72, 0.055]} radius={0.035} smoothness={8} castShadow>
         <meshStandardMaterial color="#050506" roughness={0.34} metalness={0.6} />
       </RoundedBox>
       <mesh position={[0, 0, 0.038]}>
         <planeGeometry args={[1.0, 0.58]} />
         <meshBasicMaterial map={texture} toneMapped={false} />
       </mesh>
+      <mesh position={[0, 0, 0.045]}>
+        <planeGeometry args={[1.0, 0.58]} />
+        <meshPhysicalMaterial color="#d9fbff" transparent opacity={0.055} roughness={0.04} metalness={0.02} transmission={0.14} />
+      </mesh>
+      <mesh position={[-0.48, -0.345, 0.05]}>
+        <sphereGeometry args={[0.014, 10, 10]} />
+        <meshBasicMaterial color={variant === "pipeline" ? cyan : red} />
+      </mesh>
+      {[-0.28, -0.18, -0.08].map((x) => (
+        <mesh key={x} position={[x, -0.348, 0.05]}>
+          <boxGeometry args={[0.055, 0.009, 0.008]} />
+          <meshBasicMaterial color="#30353d" transparent opacity={0.82} />
+        </mesh>
+      ))}
       <mesh position={[0, -0.46, 0]}>
         <boxGeometry args={[0.08, 0.34, 0.05]} />
         <meshStandardMaterial color="#050506" roughness={0.48} metalness={0.7} />
@@ -516,6 +646,7 @@ function Monitor({ position, variant }: { position: [number, number, number]; va
       <RoundedBox args={[0.48, 0.045, 0.3]} radius={0.03} position={[0, -0.63, 0.02]}>
         <meshStandardMaterial color="#060607" roughness={0.5} metalness={0.58} />
       </RoundedBox>
+      <Line points={[[0, -0.63, -0.08], [0.12, -0.72, -0.22], [0.38, -0.72, -0.34]]} color="#16171b" lineWidth={1} />
     </group>
   );
 }
@@ -524,9 +655,19 @@ function Laptop({ position, variant }: { position: [number, number, number]; var
   const texture = useMemo(() => makeScreenTexture(variant), [variant]);
   return (
     <group position={position} rotation={[-0.04, 0.05, 0]}>
-      <RoundedBox args={[0.62, 0.035, 0.43]} radius={0.025}>
+      <RoundedBox args={[0.62, 0.035, 0.43]} radius={0.025} castShadow>
         <meshStandardMaterial color="#060607" roughness={0.44} metalness={0.62} />
       </RoundedBox>
+      {Array.from({ length: 12 }).map((_, index) => (
+        <mesh key={index} position={[-0.23 + (index % 6) * 0.09, 0.025, -0.04 + Math.floor(index / 6) * 0.07]}>
+          <boxGeometry args={[0.045, 0.008, 0.028]} />
+          <meshBasicMaterial color={index % 4 === 0 ? "#29343a" : "#1a1d21"} transparent opacity={0.78} />
+        </mesh>
+      ))}
+      <mesh position={[0.21, 0.026, 0.15]}>
+        <boxGeometry args={[0.12, 0.006, 0.07]} />
+        <meshBasicMaterial color="#25282d" transparent opacity={0.8} />
+      </mesh>
       <group position={[0, 0.2, -0.21]} rotation={[-0.9, 0, 0]}>
         <RoundedBox args={[0.62, 0.38, 0.035]} radius={0.025}>
           <meshStandardMaterial color="#050506" roughness={0.38} metalness={0.64} />
@@ -534,6 +675,10 @@ function Laptop({ position, variant }: { position: [number, number, number]; var
         <mesh position={[0, 0, 0.023]}>
           <planeGeometry args={[0.53, 0.3]} />
           <meshBasicMaterial map={texture} toneMapped={false} />
+        </mesh>
+        <mesh position={[0, -0.205, 0.024]}>
+          <boxGeometry args={[0.5, 0.012, 0.008]} />
+          <meshBasicMaterial color={red} transparent opacity={0.42} />
         </mesh>
       </group>
     </group>
@@ -617,16 +762,38 @@ function OfficeChair({
 }) {
   return (
     <group position={position} rotation={rotation}>
-      <RoundedBox args={[0.72, 0.16, 0.68]} radius={0.12} position={[0, 0.16, 0]}>
+      <RoundedBox args={[0.72, 0.16, 0.68]} radius={0.12} position={[0, 0.16, 0]} castShadow>
         <meshStandardMaterial map={fabricTexture} color="#111215" roughness={0.72} metalness={0.04} />
       </RoundedBox>
-      <RoundedBox args={[0.72, 0.86, 0.15]} radius={0.12} position={[0, 0.68, 0.32]} rotation={[-0.16, 0, 0]}>
+      <RoundedBox args={[0.72, 0.86, 0.15]} radius={0.12} position={[0, 0.68, 0.32]} rotation={[-0.16, 0, 0]} castShadow>
         <meshStandardMaterial map={fabricTexture} color="#101114" roughness={0.76} metalness={0.04} />
       </RoundedBox>
+      <RoundedBox args={[0.48, 0.18, 0.13]} radius={0.07} position={[0, 1.2, 0.26]} rotation={[-0.16, 0, 0]}>
+        <meshStandardMaterial map={fabricTexture} color="#101114" roughness={0.76} metalness={0.04} />
+      </RoundedBox>
+      {[-0.22, 0, 0.22].map((x) => (
+        <Line
+          key={x}
+          points={[
+            [x, 0.3, 0.405],
+            [x, 1.08, 0.3],
+          ]}
+          color="#20242a"
+          lineWidth={0.8}
+          transparent
+          opacity={0.56}
+        />
+      ))}
       {[-0.45, 0.45].map((x) => (
         <RoundedBox key={x} args={[0.09, 0.08, 0.55]} radius={0.04} position={[x, 0.33, -0.02]}>
           <meshStandardMaterial color="#050506" roughness={0.42} metalness={0.55} />
         </RoundedBox>
+      ))}
+      {[-0.49, 0.49].map((x) => (
+        <mesh key={`post-${x}`} position={[x, 0.08, 0.16]}>
+          <cylinderGeometry args={[0.018, 0.018, 0.4, 8]} />
+          <meshStandardMaterial color="#050506" roughness={0.42} metalness={0.62} />
+        </mesh>
       ))}
       <mesh position={[0, -0.14, 0]}>
         <cylinderGeometry args={[0.055, 0.075, 0.62, 12]} />
@@ -1206,7 +1373,9 @@ function interpolateCamera(path: Array<{ p: number; camera: THREE.Vector3; targe
 }
 
 function useReducedMotion() {
-  const [reduced, setReduced] = useState(false);
+  const [reduced, setReduced] = useState(() =>
+    typeof window === "undefined" ? false : window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+  );
 
   useEffect(() => {
     const query = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -1220,7 +1389,10 @@ function useReducedMotion() {
 }
 
 function useCompactScene() {
-  const [compact, setCompact] = useState(false);
+  const [compact, setCompact] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return window.matchMedia("(prefers-reduced-motion: reduce)").matches || window.matchMedia("(max-width: 700px)").matches;
+  });
 
   useEffect(() => {
     const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");

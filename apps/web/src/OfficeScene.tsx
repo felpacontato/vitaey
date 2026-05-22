@@ -195,15 +195,15 @@ function OfficeShell({
       </mesh>
       <mesh position={[0, 1.52, -8.35]}>
         <boxGeometry args={[18.2, 5.45, 0.18]} />
-        <meshStandardMaterial map={wallTexture} bumpMap={wallTexture} bumpScale={0.018} color="#20252c" roughness={0.68} metalness={0.2} emissive="#030507" emissiveIntensity={0.28} />
+        <meshStandardMaterial map={wallTexture} bumpMap={wallTexture} bumpScale={0.018} color="#2a313a" roughness={0.64} metalness={0.22} emissive="#080c10" emissiveIntensity={0.34} />
       </mesh>
       <mesh position={[0, 1.1, -8.235]}>
         <boxGeometry args={[17.65, 3.15, 0.08]} />
-        <meshStandardMaterial color="#181d23" roughness={0.56} metalness={0.3} emissive="#040607" emissiveIntensity={0.18} />
+        <meshStandardMaterial color="#242b33" roughness={0.54} metalness={0.32} emissive="#060a0d" emissiveIntensity={0.26} />
       </mesh>
       <mesh position={[0, 2.72, -8.18]}>
         <boxGeometry args={[17.75, 0.62, 0.09]} />
-        <meshStandardMaterial color="#252b33" roughness={0.48} metalness={0.34} emissive="#040607" emissiveIntensity={0.16} />
+        <meshStandardMaterial color="#323943" roughness={0.46} metalness={0.36} emissive="#060a0d" emissiveIntensity={0.22} />
       </mesh>
       <mesh position={[0, -0.56, -8.15]}>
         <boxGeometry args={[17.7, 0.62, 0.12]} />
@@ -235,6 +235,7 @@ function OfficeShell({
         <meshBasicMaterial color={deepRed} transparent opacity={0.12} side={THREE.DoubleSide} />
       </mesh>
       <FloorInlays />
+      <RoomSeams />
       <ClosedBackWall />
       <WallCladding />
       <ArchitecturalTrims />
@@ -364,27 +365,68 @@ function FloorInlays() {
   );
 }
 
+function RoomSeams() {
+  return (
+    <group>
+      <mesh position={[0, -0.92, -7.9]}>
+        <boxGeometry args={[17.55, 0.075, 0.08]} />
+        <meshStandardMaterial color="#161a20" roughness={0.38} metalness={0.56} emissive="#05080a" emissiveIntensity={0.25} />
+      </mesh>
+      <mesh position={[0, -0.865, -7.835]}>
+        <boxGeometry args={[17.15, 0.018, 0.024]} />
+        <meshBasicMaterial color={red} transparent opacity={0.62} />
+      </mesh>
+      <mesh position={[0, 3.46, -7.88]}>
+        <boxGeometry args={[17.55, 0.09, 0.1]} />
+        <meshStandardMaterial color="#171d24" roughness={0.36} metalness={0.6} emissive="#05080a" emissiveIntensity={0.2} />
+      </mesh>
+      {[-8.08, 8.08].map((x) => (
+        <group key={x}>
+          <mesh position={[x, -0.91, -1.18]}>
+            <boxGeometry args={[0.09, 0.07, 19.9]} />
+            <meshStandardMaterial color="#11161c" roughness={0.4} metalness={0.55} emissive="#030607" emissiveIntensity={0.18} />
+          </mesh>
+          <mesh position={[x, 1.48, -7.9]}>
+            <boxGeometry args={[0.12, 4.58, 0.11]} />
+            <meshStandardMaterial color="#222a33" roughness={0.42} metalness={0.48} emissive="#05080b" emissiveIntensity={0.25} />
+          </mesh>
+          <mesh position={[x * 0.998, 1.38, -1.18]}>
+            <boxGeometry args={[0.028, 3.9, 18.8]} />
+            <meshBasicMaterial color={cyan} transparent opacity={0.08} />
+          </mesh>
+        </group>
+      ))}
+      {[-6.15, -3.05, 0, 3.05, 6.15].map((x, index) => (
+        <mesh key={x} position={[x, 1.4, -7.77]}>
+          <boxGeometry args={[0.035, 3.65, 0.04]} />
+          <meshBasicMaterial color={index % 2 ? cyan : red} transparent opacity={index % 2 ? 0.28 : 0.38} />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
 function ClosedBackWall() {
   return (
     <group>
       <RoundedBox args={[17.25, 4.38, 0.13]} radius={0.035} position={[0, 1.48, -8.11]}>
-        <meshStandardMaterial color="#171c22" roughness={0.62} metalness={0.26} emissive="#030506" emissiveIntensity={0.22} />
+        <meshStandardMaterial color="#2b333d" roughness={0.58} metalness={0.28} emissive="#080d11" emissiveIntensity={0.36} />
       </RoundedBox>
       <RoundedBox args={[16.5, 1.18, 0.08]} radius={0.025} position={[0, 2.58, -7.985]}>
-        <meshStandardMaterial color="#222831" roughness={0.52} metalness={0.32} emissive="#050708" emissiveIntensity={0.2} />
+        <meshStandardMaterial color="#343d48" roughness={0.5} metalness={0.34} emissive="#080d11" emissiveIntensity={0.3} />
       </RoundedBox>
       <RoundedBox args={[16.5, 1.36, 0.08]} radius={0.025} position={[0, 0.14, -7.985]}>
-        <meshStandardMaterial color="#151a20" roughness={0.56} metalness={0.28} emissive="#030506" emissiveIntensity={0.2} />
+        <meshStandardMaterial color="#222a32" roughness={0.54} metalness={0.3} emissive="#060a0d" emissiveIntensity={0.26} />
       </RoundedBox>
       {[-7.55, -5.05, -2.55, 0, 2.55, 5.05, 7.55].map((x, index) => (
         <group key={x} position={[x, 1.15, -7.95]}>
           <RoundedBox args={[2.1, 3.35, 0.09]} radius={0.018}>
             <meshStandardMaterial
-              color={index % 2 ? "#20262e" : "#192027"}
-              roughness={0.58}
-              metalness={0.28}
-              emissive={index % 2 ? "#040607" : "#030506"}
-              emissiveIntensity={0.24}
+              color={index % 2 ? "#2d3640" : "#26303a"}
+              roughness={0.54}
+              metalness={0.3}
+              emissive={index % 2 ? "#070c10" : "#060a0e"}
+              emissiveIntensity={0.32}
             />
           </RoundedBox>
           <mesh position={[0, 0, 0.066]}>
@@ -577,18 +619,18 @@ function CeilingSystem() {
 function MeetingZone({ deskTexture, fabricTexture }: { deskTexture: THREE.Texture; fabricTexture: THREE.Texture }) {
   return (
     <group position={[0, 0, -3.86]}>
-      <RoundedBox args={[5.6, 0.18, 1.62]} radius={0.06} position={[0, -0.62, 0.78]}>
+      <RoundedBox args={[5.6, 0.18, 1.62]} radius={0.06} position={[0, -0.36, 0.78]}>
         <meshStandardMaterial map={deskTexture} color="#161212" roughness={0.44} metalness={0.32} />
       </RoundedBox>
-      <RoundedBox args={[2.2, 0.035, 0.22]} radius={0.025} position={[0, -0.5, 0.78]}>
+      <RoundedBox args={[2.2, 0.035, 0.22]} radius={0.025} position={[0, -0.24, 0.78]}>
         <meshStandardMaterial color="#050506" roughness={0.36} metalness={0.62} />
       </RoundedBox>
-      <mesh position={[0, -0.465, 0.78]}>
+      <mesh position={[0, -0.205, 0.78]}>
         <cylinderGeometry args={[0.16, 0.16, 0.035, 24]} />
         <meshStandardMaterial color="#090a0c" roughness={0.44} metalness={0.54} />
       </mesh>
       {[-1.85, -0.55, 0.55, 1.85].map((x, index) => (
-        <group key={x} position={[x, -0.51, 0.78 + (index % 2 ? 0.38 : -0.38)]} rotation={[0, index % 2 ? -0.14 : 0.18, 0]}>
+        <group key={x} position={[x, -0.25, 0.78 + (index % 2 ? 0.38 : -0.38)]} rotation={[0, index % 2 ? -0.14 : 0.18, 0]}>
           <RoundedBox args={[0.46, 0.012, 0.29]} radius={0.008}>
             <meshStandardMaterial color="#eee8dd" roughness={0.6} metalness={0.02} />
           </RoundedBox>
@@ -619,7 +661,7 @@ function MeetingZone({ deskTexture, fabricTexture }: { deskTexture: THREE.Textur
         <OfficeChair
           key={x}
           position={[x, -0.62, 1.85]}
-          rotation={[0, Math.PI + (index % 2 ? -0.16 : 0.16), 0]}
+          rotation={[0, index % 2 ? -0.16 : 0.16, 0]}
           fabricTexture={fabricTexture}
         />
       ))}
@@ -650,9 +692,9 @@ function DeskCluster({
       {visibleDesks.map((desk, index) => (
         <group key={desk.x} position={[desk.x, 0, desk.z]} rotation={[0, desk.rotate, 0]}>
           <OfficeDesk deskTexture={deskTexture} screen={desk.screen} />
-          <OfficeChair position={[0, -0.62, 1.22]} rotation={[0, Math.PI, 0]} fabricTexture={fabricTexture} />
-          <CpuTower position={[0.93, -0.44, -0.3]} />
-          {index % 2 === 0 ? <DeskLamp position={[-0.78, -0.34, -0.2]} /> : <DocumentTray position={[-0.8, -0.58, 0.28]} />}
+          <OfficeChair position={[0, -0.62, 1.22]} rotation={[0, index % 2 ? -0.06 : 0.06, 0]} fabricTexture={fabricTexture} />
+          <CpuTower position={[0.93, -0.68, -0.3]} />
+          {index % 2 === 0 ? <DeskLamp position={[-0.78, -0.25, -0.2]} /> : <DocumentTray position={[-0.8, -0.235, 0.28]} />}
           <DeskAccessories index={index} />
         </group>
       ))}
@@ -663,44 +705,44 @@ function DeskCluster({
 function OfficeDesk({ deskTexture, screen }: { deskTexture: THREE.Texture; screen: string }) {
   return (
     <group>
-      <RoundedBox args={[2.35, 0.16, 1.28]} radius={0.04} position={[0, -0.7, 0]}>
+      <RoundedBox args={[2.35, 0.16, 1.28]} radius={0.04} position={[0, -0.36, 0]}>
         <meshStandardMaterial map={deskTexture} color="#171212" roughness={0.42} metalness={0.36} />
       </RoundedBox>
-      <mesh position={[-1.08, -0.54, 0.01]}>
-        <boxGeometry args={[0.035, 0.38, 1.08]} />
+      <mesh position={[-1.08, -0.69, 0.01]}>
+        <boxGeometry args={[0.045, 0.56, 1.08]} />
         <meshStandardMaterial color="#080708" roughness={0.5} metalness={0.34} />
       </mesh>
-      <mesh position={[1.08, -0.54, 0.01]}>
-        <boxGeometry args={[0.035, 0.38, 1.08]} />
+      <mesh position={[1.08, -0.69, 0.01]}>
+        <boxGeometry args={[0.045, 0.56, 1.08]} />
         <meshStandardMaterial color="#080708" roughness={0.5} metalness={0.34} />
       </mesh>
       {[-0.42, 0, 0.42].map((z) => (
-        <mesh key={z} position={[1.102, -0.47, z]}>
+        <mesh key={z} position={[1.108, -0.62, z]}>
           <boxGeometry args={[0.018, 0.018, 0.24]} />
           <meshBasicMaterial color={z === 0 ? red : "#282a2e"} transparent opacity={0.78} />
         </mesh>
       ))}
-      <mesh position={[0.76, -0.605, -0.28]} rotation={[-Math.PI / 2, 0, 0]}>
+      <mesh position={[0.76, -0.255, -0.28]} rotation={[-Math.PI / 2, 0, 0]}>
         <ringGeometry args={[0.08, 0.105, 28]} />
         <meshStandardMaterial color="#050506" roughness={0.5} metalness={0.52} />
       </mesh>
       {[-0.92, 0.92].flatMap((x) =>
         [-0.46, 0.46].map((z) => (
-          <mesh key={`${x}-${z}`} position={[x, -0.23, z]}>
-            <cylinderGeometry args={[0.045, 0.06, 0.9, 8]} />
+          <mesh key={`${x}-${z}`} position={[x, -0.72, z]}>
+            <cylinderGeometry args={[0.04, 0.052, 0.58, 8]} />
             <meshStandardMaterial color="#060607" roughness={0.7} metalness={0.34} />
           </mesh>
         )),
       )}
-      <Monitor position={[0, 0.04, -0.43]} variant={screen} />
-      <Keyboard position={[0, -0.59, 0.16]} />
-      <Mouse position={[0.62, -0.58, 0.18]} />
-      <Laptop position={[-0.66, -0.57, 0.22]} variant={screen === "pipeline" ? "radar" : "pipeline"} />
+      <Monitor position={[0, 0.39, -0.43]} variant={screen} />
+      <Keyboard position={[0, -0.235, 0.16]} />
+      <Mouse position={[0.62, -0.225, 0.18]} />
+      <Laptop position={[-0.66, -0.22, 0.22]} variant={screen === "pipeline" ? "radar" : "pipeline"} />
       <Line
         points={[
-          [0.14, -0.59, -0.18],
-          [0.42, -0.62, -0.2],
-          [0.78, -0.62, -0.28],
+          [0.14, -0.25, -0.18],
+          [0.42, -0.27, -0.2],
+          [0.78, -0.27, -0.28],
         ]}
         color="#18191d"
         lineWidth={1}
@@ -809,20 +851,20 @@ function Mouse({ position }: { position: [number, number, number] }) {
 function DeskAccessories({ index }: { index: number }) {
   return (
     <group>
-      <RoundedBox args={[0.42, 0.012, 0.28]} radius={0.008} position={[-0.17, -0.596, 0.45]} rotation={[0, 0.12, 0]}>
+      <RoundedBox args={[0.42, 0.012, 0.28]} radius={0.008} position={[-0.17, -0.236, 0.45]} rotation={[0, 0.12, 0]}>
         <meshStandardMaterial color={index % 2 ? "#24272c" : "#efe9df"} roughness={0.65} metalness={0.02} />
       </RoundedBox>
       <Line
         points={[
-          [-0.34, -0.585, 0.5],
-          [-0.05, -0.582, 0.49],
+          [-0.34, -0.225, 0.5],
+          [-0.05, -0.222, 0.49],
         ]}
         color={index % 2 ? cyan : red}
         lineWidth={1.1}
         transparent
         opacity={0.7}
       />
-      <group position={[0.9, -0.55, 0.38]}>
+      <group position={[0.9, -0.19, 0.38]}>
         <mesh>
           <cylinderGeometry args={[0.075, 0.08, 0.14, 18]} />
           <meshStandardMaterial color="#0b0c0e" roughness={0.42} metalness={0.36} />
@@ -832,7 +874,7 @@ function DeskAccessories({ index }: { index: number }) {
           <meshStandardMaterial color="#0b0c0e" roughness={0.42} metalness={0.36} />
         </mesh>
       </group>
-      <group position={[-0.94, -0.49, 0.46]}>
+      <group position={[-0.94, -0.16, 0.46]}>
         <mesh>
           <cylinderGeometry args={[0.07, 0.055, 0.22, 12]} />
           <meshStandardMaterial color="#07080a" roughness={0.5} metalness={0.44} />
@@ -973,7 +1015,20 @@ function WallDashboard({ signalScore }: { signalScore: number }) {
   const hasSignal = displayedScore > 0;
 
   return (
-    <group position={[-5.95, 1.48, -4.4]} rotation={[0, 0.58, 0]}>
+    <group position={[-7.82, 1.58, -2.95]} rotation={[0, Math.PI / 2, 0]}>
+      <RoundedBox args={[3.6, 2.22, 0.09]} radius={0.045} position={[0, 0, -0.08]}>
+        <meshStandardMaterial color="#202832" roughness={0.48} metalness={0.38} emissive="#060a0d" emissiveIntensity={0.3} />
+      </RoundedBox>
+      <mesh position={[0, -1.22, -0.025]}>
+        <boxGeometry args={[3.18, 0.07, 0.08]} />
+        <meshStandardMaterial color="#0b0d10" roughness={0.38} metalness={0.62} />
+      </mesh>
+      {[-1.42, 1.42].map((x) => (
+        <mesh key={x} position={[x, 0, -0.01]}>
+          <boxGeometry args={[0.05, 2.02, 0.075]} />
+          <meshBasicMaterial color={cyan} transparent opacity={0.28} />
+        </mesh>
+      ))}
       <PresentationScreen
         width={3.15}
         height={1.8}
@@ -1049,20 +1104,40 @@ function ResumeScanner() {
 
 function PipelineWall() {
   return (
-    <group position={[3.45, 0.25, -2.5]} rotation={[0, -0.42, 0]}>
+    <group position={[3.85, -0.86, -4.55]} rotation={[0, -0.28, 0]}>
+      <RoundedBox args={[3.55, 0.34, 0.78]} radius={0.055} position={[0, 0.14, 0]}>
+        <meshStandardMaterial color="#08090b" roughness={0.42} metalness={0.58} />
+      </RoundedBox>
+      <RoundedBox args={[3.18, 0.08, 0.64]} radius={0.035} position={[0, 0.34, -0.02]}>
+        <meshStandardMaterial color="#15181d" roughness={0.34} metalness={0.68} />
+      </RoundedBox>
+      <mesh position={[0, 0.52, -0.2]} rotation={[-0.48, 0, 0]}>
+        <boxGeometry args={[3.18, 0.045, 0.42]} />
+        <meshStandardMaterial color="#07080a" roughness={0.28} metalness={0.72} />
+      </mesh>
       {["SALVA", "REVISA", "ENVIA", "ENTREV", "OFERTA"].map((label, index) => (
-        <group key={label} position={[index * 0.68, 0, 0]}>
-          <RoundedBox args={[0.52, 1.75, 0.045]} radius={0.025}>
-            <meshPhysicalMaterial color="#0a1114" transparent opacity={0.34} roughness={0.18} transmission={0.32} />
+        <group key={label} position={[-1.28 + index * 0.64, 0.58, -0.08]} rotation={[-0.48, 0, 0]}>
+          <RoundedBox args={[0.42, 0.24, 0.03]} radius={0.018}>
+            <meshStandardMaterial color="#101923" roughness={0.34} metalness={0.42} emissive={index % 2 ? "#08323a" : "#320808"} emissiveIntensity={0.24} />
           </RoundedBox>
-          <mesh position={[0, 0.78 - index * 0.24, 0.08]}>
-            <sphereGeometry args={[0.075 + index * 0.006, 18, 18]} />
-            <meshStandardMaterial color={index % 2 ? cyan : red} emissive={index % 2 ? cyan : red} emissiveIntensity={1.2} />
+          <mesh position={[0, 0.045, 0.028]}>
+            <boxGeometry args={[0.28, 0.022, 0.01]} />
+            <meshBasicMaterial color={index % 2 ? cyan : red} transparent opacity={0.72} />
           </mesh>
-          <Text position={[-0.21, -0.96, 0.08]} fontSize={0.065} color={red} anchorX="left">
+          <mesh position={[0.14, -0.055, 0.03]}>
+            <sphereGeometry args={[0.025 + index * 0.002, 12, 12]} />
+            <meshBasicMaterial color={index % 2 ? cyan : red} />
+          </mesh>
+          <Text position={[-0.17, -0.09, 0.032]} fontSize={0.043} color="#f1eee8" anchorX="left">
             {label}
           </Text>
         </group>
+      ))}
+      {[-1.5, 1.5].map((x) => (
+        <mesh key={x} position={[x, -0.18, 0.18]}>
+          <cylinderGeometry args={[0.055, 0.065, 0.72, 10]} />
+          <meshStandardMaterial color="#050607" roughness={0.52} metalness={0.58} />
+        </mesh>
       ))}
     </group>
   );
@@ -1154,7 +1229,7 @@ function ShelfUnit({
 function OfficeMicroDetails() {
   return (
     <group>
-      <FloatingGlassBoards />
+      <WallMountedStatusBoards />
       <CableRuns />
       <ReceptionPedestal />
     </group>
@@ -1178,7 +1253,7 @@ function WallScreenArray() {
   return (
     <group>
       <RoundedBox args={[11.4, 1.42, 0.08]} radius={0.035} position={[0, 2.42, -8.08]}>
-        <meshStandardMaterial color="#252d36" roughness={0.48} metalness={0.34} emissive="#071015" emissiveIntensity={0.36} />
+        <meshStandardMaterial color="#36414c" roughness={0.46} metalness={0.36} emissive="#0b1218" emissiveIntensity={0.42} />
       </RoundedBox>
       <mesh position={[0, 3.16, -7.965]}>
         <boxGeometry args={[10.85, 0.042, 0.038]} />
@@ -1195,9 +1270,17 @@ function WallScreenArray() {
         { x: 4.75, title: "PERFIL", variant: "perfil" },
       ].map((screen) => (
         <group key={screen.title} position={[screen.x, 2.42, -8.0]}>
-          <RoundedBox args={[2.3, 1.25, 0.045]} radius={0.028} position={[0, 0, -0.075]}>
-            <meshStandardMaterial color="#1b222a" roughness={0.5} metalness={0.32} emissive="#06090c" emissiveIntensity={0.28} />
+          <RoundedBox args={[2.38, 1.32, 0.06]} radius={0.028} position={[0, 0, -0.075]}>
+            <meshStandardMaterial color="#2a333d" roughness={0.48} metalness={0.34} emissive="#080d12" emissiveIntensity={0.36} />
           </RoundedBox>
+          <mesh position={[0, -0.72, -0.02]}>
+            <boxGeometry args={[0.12, 0.22, 0.08]} />
+            <meshStandardMaterial color="#090b0e" roughness={0.4} metalness={0.68} />
+          </mesh>
+          <mesh position={[0, -0.88, -0.035]}>
+            <boxGeometry args={[1.42, 0.045, 0.06]} />
+            <meshStandardMaterial color="#090b0e" roughness={0.4} metalness={0.68} />
+          </mesh>
           <PresentationScreen width={1.9} height={0.92} title={screen.title} variant={screen.variant} />
           <mesh position={[0, -0.58, 0.07]}>
             <boxGeometry args={[1.72, 0.035, 0.06]} />
@@ -1275,10 +1358,10 @@ function ConsoleButtons({ offset }: { offset: number }) {
 function UtilityZone() {
   return (
     <group>
-      <StorageCabinet position={[-7.55, 0.25, 1.58]} rotation={[0, Math.PI / 2, 0]} label="RH" />
-      <StorageCabinet position={[7.55, 0.25, 1.72]} rotation={[0, -Math.PI / 2, 0]} label="OPS" />
-      <StorageCabinet position={[5.86, 0.25, -7.15]} rotation={[0, -0.04, 0]} label="DATA" wide />
-      <WaterCooler position={[-7.42, -0.35, -0.18]} rotation={[0, Math.PI / 2, 0]} />
+      <StorageCabinet position={[-7.55, -0.15, 1.58]} rotation={[0, Math.PI / 2, 0]} label="RH" />
+      <StorageCabinet position={[7.55, -0.15, 1.72]} rotation={[0, -Math.PI / 2, 0]} label="OPS" />
+      <StorageCabinet position={[5.86, -0.15, -7.15]} rotation={[0, -0.04, 0]} label="DATA" wide />
+      <WaterCooler position={[-7.42, -0.58, -0.18]} rotation={[0, Math.PI / 2, 0]} />
       <MaintenancePanel position={[-7.92, 1.02, -2.05]} rotation={[0, Math.PI / 2, 0]} />
       <MaintenancePanel position={[7.92, 1.02, -2.05]} rotation={[0, -Math.PI / 2, 0]} mirror />
     </group>
@@ -1445,16 +1528,24 @@ function SafetyFloorMarks() {
 
 function CareerHologram() {
   return (
-    <group position={[-5.9, 0.18, -1.45]} rotation={[0, 0.38, 0]}>
-      <RoundedBox args={[0.78, 0.16, 0.78]} radius={0.06}>
+    <group position={[-5.9, -0.92, -1.45]} rotation={[0, 0.38, 0]}>
+      <RoundedBox args={[0.88, 0.16, 0.88]} radius={0.06} position={[0, 0.02, 0]}>
         <meshStandardMaterial color="#060708" roughness={0.34} metalness={0.64} />
       </RoundedBox>
-      <mesh position={[0, 0.13, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+      <mesh position={[0, 0.32, 0]}>
+        <cylinderGeometry args={[0.11, 0.16, 0.48, 28]} />
+        <meshStandardMaterial color="#07090b" roughness={0.36} metalness={0.68} emissive="#041014" emissiveIntensity={0.22} />
+      </mesh>
+      <mesh position={[0, 0.58, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <ringGeometry args={[0.22, 0.36, 48]} />
         <meshBasicMaterial color={cyan} transparent opacity={0.34} side={THREE.DoubleSide} />
       </mesh>
+      <mesh position={[0, 0.78, 0]}>
+        <cylinderGeometry args={[0.018, 0.035, 0.44, 16]} />
+        <meshBasicMaterial color={cyan} transparent opacity={0.45} />
+      </mesh>
       <Float speed={1.1} floatIntensity={0.16} rotationIntensity={0.28}>
-        <group position={[0, 0.68, 0]}>
+        <group position={[0, 1.12, 0]}>
           <mesh>
             <sphereGeometry args={[0.36, 28, 18]} />
             <meshBasicMaterial color={cyan} transparent opacity={0.12} wireframe />
@@ -1475,17 +1566,28 @@ function CareerHologram() {
   );
 }
 
-function FloatingGlassBoards() {
+function WallMountedStatusBoards() {
   return (
     <group>
       {[
-        { x: -6.2, y: 2.05, z: -1.5, r: 0.58, title: "VAGAS" },
-        { x: 6.15, y: 2.12, z: 0.38, r: -0.68, title: "ENVIO" },
+        { x: -8.02, y: 2.05, z: -1.72, r: Math.PI / 2, title: "VAGAS" },
+        { x: 8.02, y: 2.12, z: -0.78, r: -Math.PI / 2, title: "ENVIO" },
       ].map((panel) => (
-        <group key={panel.title} position={[panel.x, panel.y, panel.z]} rotation={[0.02, panel.r, 0]}>
-          <RoundedBox args={[1.58, 0.92, 0.035]} radius={0.025}>
-            <meshPhysicalMaterial color="#071317" transparent opacity={0.24} roughness={0.16} transmission={0.4} />
+        <group key={panel.title} position={[panel.x, panel.y, panel.z]} rotation={[0, panel.r, 0]}>
+          <RoundedBox args={[1.74, 1.04, 0.075]} radius={0.028} position={[0, 0, -0.045]}>
+            <meshStandardMaterial color="#1d252e" roughness={0.46} metalness={0.36} emissive="#060a0e" emissiveIntensity={0.24} />
           </RoundedBox>
+          <RoundedBox args={[1.58, 0.92, 0.04]} radius={0.025}>
+            <meshStandardMaterial color="#071317" roughness={0.22} metalness={0.34} emissive={panel.title === "ENVIO" ? "#280808" : "#08232a"} emissiveIntensity={0.18} />
+          </RoundedBox>
+          <mesh position={[0, -0.62, -0.015]}>
+            <boxGeometry args={[1.34, 0.05, 0.055]} />
+            <meshStandardMaterial color="#08090b" roughness={0.38} metalness={0.62} />
+          </mesh>
+          <mesh position={[0, 0.6, -0.015]}>
+            <boxGeometry args={[1.34, 0.035, 0.04]} />
+            <meshBasicMaterial color={panel.title === "ENVIO" ? red : cyan} transparent opacity={0.38} />
+          </mesh>
           <Text position={[-0.64, 0.3, 0.035]} fontSize={0.08} color={red} anchorX="left">
             {panel.title}
           </Text>

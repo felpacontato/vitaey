@@ -91,6 +91,8 @@ const emptyIntegrationLinks: IntegrationLinks = {
   website: "",
 };
 
+const stationSectionIds: StationId[] = ["curriculo", "radar", "kanban", "integracoes", "perfil", "sobre"];
+
 function App() {
   const [query, setQuery] = useState("");
   const [workModel, setWorkModel] = useState<WorkModel | "all">("all");
@@ -114,6 +116,7 @@ function App() {
   const [profileSaving, setProfileSaving] = useState(false);
   const [resumeUploading, setResumeUploading] = useState(false);
   const [activeStation, setActiveStation] = useState<StationId | null>(null);
+  const [focusedStation, setFocusedStation] = useState<StationId | null>(null);
   const [integrationLinks, setIntegrationLinks] = useState<IntegrationLinks>(emptyIntegrationLinks);
   const [integrationNotice, setIntegrationNotice] = useState("");
 
@@ -197,6 +200,86 @@ function App() {
       setSelectedJob(jobs[0]);
     }
   }, [jobs, selectedJob]);
+
+  useEffect(() => {
+    let settleTimer = 0;
+    let lateSettleTimer = 0;
+    let pollTimer = 0;
+    let lastScrollY = window.scrollY;
+    let lastScrollAt = performance.now();
+
+    const measureFocusedStation = () => {
+      const focusLine = window.innerHeight * 0.56;
+      const activationDistance = Math.max(42, Math.min(96, window.innerHeight * 0.12));
+      let nextStation: StationId | null = null;
+      let closestDistance = Number.POSITIVE_INFINITY;
+
+      for (const id of stationSectionIds) {
+        const section = document.getElementById(id);
+        if (!section) continue;
+
+        const rect = section.getBoundingClientRect();
+        const hasViewportOverlap = rect.top < window.innerHeight * 0.82 && rect.bottom > window.innerHeight * 0.18;
+        if (!hasViewportOverlap) continue;
+
+        const sectionCenter = rect.top + rect.height * 0.5;
+        const distance = Math.abs(sectionCenter - focusLine);
+        if (distance < closestDistance) {
+          closestDistance = distance;
+          nextStation = id;
+        }
+      }
+
+      setFocusedStation(closestDistance <= activationDistance ? nextStation : null);
+    };
+
+    const noteScrollMovement = () => {
+      lastScrollAt = performance.now();
+      lastScrollY = window.scrollY;
+      setFocusedStation(null);
+    };
+
+    const pollSettledFocus = () => {
+      const currentScrollY = window.scrollY;
+      if (Math.abs(currentScrollY - lastScrollY) > 0.5) {
+        lastScrollY = currentScrollY;
+        lastScrollAt = performance.now();
+        setFocusedStation(null);
+        return;
+      }
+
+      if (performance.now() - lastScrollAt >= 220) {
+        measureFocusedStation();
+      }
+    };
+
+    const scheduleSettledFocus = () => {
+      noteScrollMovement();
+      window.clearTimeout(settleTimer);
+      window.clearTimeout(lateSettleTimer);
+      settleTimer = window.setTimeout(() => {
+        window.requestAnimationFrame(measureFocusedStation);
+      }, 260);
+      lateSettleTimer = window.setTimeout(() => {
+        window.requestAnimationFrame(measureFocusedStation);
+      }, 700);
+    };
+
+    settleTimer = window.setTimeout(measureFocusedStation, 180);
+    pollTimer = window.setInterval(pollSettledFocus, 120);
+    window.addEventListener("scroll", scheduleSettledFocus, { passive: true });
+    window.addEventListener("scrollend", measureFocusedStation);
+    window.addEventListener("resize", scheduleSettledFocus);
+
+    return () => {
+      window.clearTimeout(settleTimer);
+      window.clearTimeout(lateSettleTimer);
+      window.clearInterval(pollTimer);
+      window.removeEventListener("scroll", scheduleSettledFocus);
+      window.removeEventListener("scrollend", measureFocusedStation);
+      window.removeEventListener("resize", scheduleSettledFocus);
+    };
+  }, []);
 
   const filteredJobs = useMemo(() => {
     return jobs.filter((job) => {
@@ -502,6 +585,7 @@ function App() {
         <StationGate
           id="radar"
           activeStation={activeStation}
+          focusedStation={focusedStation}
           station="Radar"
           buttonLabel="Abrir radar"
           onOpen={openStation}
@@ -654,6 +738,7 @@ function App() {
         <StationGate
           id="curriculo"
           activeStation={activeStation}
+          focusedStation={focusedStation}
           station="Currículo"
           buttonLabel="Abrir currículo"
           onOpen={openStation}
@@ -790,6 +875,7 @@ function App() {
         <StationGate
           id="kanban"
           activeStation={activeStation}
+          focusedStation={focusedStation}
           station="Pipeline"
           buttonLabel="Abrir pipeline"
           onOpen={openStation}
@@ -846,6 +932,7 @@ function App() {
         <StationGate
           id="integracoes"
           activeStation={activeStation}
+          focusedStation={focusedStation}
           station="Integrações"
           buttonLabel="Abrir integrações"
           onOpen={openStation}
@@ -909,6 +996,7 @@ function App() {
         <StationGate
           id="perfil"
           activeStation={activeStation}
+          focusedStation={focusedStation}
           station="Perfil"
           buttonLabel="Abrir perfil"
           onOpen={openStation}
@@ -961,8 +1049,9 @@ function App() {
         <StationGate
           id="sobre"
           activeStation={activeStation}
+          focusedStation={focusedStation}
           station="Sobre"
-          buttonLabel="Abrir sobre"
+          buttonLabel="Abrir sobre nós"
           onOpen={openStation}
         />
 
@@ -1044,26 +1133,33 @@ function App() {
 function StationGate({
   id,
   activeStation,
+  focusedStation,
   station,
   buttonLabel,
   onOpen,
 }: {
   id: StationId;
   activeStation: StationId | null;
+  focusedStation: StationId | null;
   station: string;
   buttonLabel: string;
   onOpen: (station: StationId) => void;
 }) {
   const isActive = activeStation === id;
+  const isFocused = focusedStation === id;
 
   return (
-    <div className={`station-gate station-gate--${id} ${isActive ? "is-active" : ""}`}>
+    <div
+      className={`station-gate station-gate--${id} ${isFocused ? "is-focused" : ""} ${isActive ? "is-active" : ""}`}
+      aria-hidden={!isFocused || isActive}
+    >
       <button
         className="station-access"
         type="button"
         onClick={() => onOpen(id)}
         aria-expanded={isActive}
         aria-label={`${buttonLabel} no monitor ${station}`}
+        tabIndex={isFocused && !isActive ? 0 : -1}
       >
         {isActive ? "Estação aberta" : buttonLabel}
         <ArrowRight />

@@ -14,6 +14,13 @@ type OfficeSceneProps = {
   applicationCount: number;
 };
 
+type CameraPathStop = {
+  p?: number;
+  section?: string;
+  camera: THREE.Vector3;
+  target: THREE.Vector3;
+};
+
 const red = "#ff2a2a";
 const deepRed = "#501010";
 const cyan = "#6be7ff";
@@ -49,10 +56,8 @@ export function OfficeScene(props: OfficeSceneProps) {
   );
 }
 
-function OfficeWorld({ signalScore, jobCount, applicationCount, compact }: OfficeSceneProps & { compact: boolean }) {
+function OfficeWorld({ signalScore, compact }: OfficeSceneProps & { compact: boolean }) {
   const rootRef = useRef<THREE.Group>(null);
-  const ringRef = useRef<THREE.Mesh>(null);
-  const particlesRef = useRef<THREE.Points>(null);
   const reducedMotion = useReducedMotion();
   const floorTexture = useMemo(() => makeFloorTexture(), []);
   const wallTexture = useMemo(() => makeWallTexture(), []);
@@ -61,44 +66,20 @@ function OfficeWorld({ signalScore, jobCount, applicationCount, compact }: Offic
   const fabricTexture = useMemo(() => makeFabricTexture(), []);
   const cameraPath = useMemo(
     () => [
-      { p: 0, camera: new THREE.Vector3(0, 2.9, 12.2), target: new THREE.Vector3(0, 0.72, -2.15) },
-      { p: 0.18, camera: new THREE.Vector3(-5.85, 1.9, 3.95), target: new THREE.Vector3(-4.85, 0.38, -0.4) },
-      { p: 0.34, camera: new THREE.Vector3(-3.3, 1.92, 4.0), target: new THREE.Vector3(-1.65, 0.38, -0.38) },
-      { p: 0.5, camera: new THREE.Vector3(2.45, 1.92, 3.85), target: new THREE.Vector3(1.65, 0.38, -0.42) },
-      { p: 0.66, camera: new THREE.Vector3(5.25, 2.0, 3.9), target: new THREE.Vector3(4.85, 0.38, -0.42) },
-      { p: 0.83, camera: new THREE.Vector3(-2.2, 2.35, -1.65), target: new THREE.Vector3(-2.2, 2.42, -8.05) },
-      { p: 1, camera: new THREE.Vector3(2.2, 2.35, -1.65), target: new THREE.Vector3(2.2, 2.42, -8.05) },
-    ],
+      { section: "dashboard", p: 0, camera: new THREE.Vector3(0, 2.9, 12.2), target: new THREE.Vector3(0, 0.72, -2.15) },
+      { section: "curriculo", camera: new THREE.Vector3(-5.85, 1.9, 3.95), target: new THREE.Vector3(-4.85, 0.38, -0.4) },
+      { section: "radar", camera: new THREE.Vector3(-3.35, 1.92, 4.0), target: new THREE.Vector3(-1.65, 0.38, -0.38) },
+      { section: "kanban", camera: new THREE.Vector3(2.45, 1.92, 3.85), target: new THREE.Vector3(1.65, 0.38, -0.42) },
+      { section: "integracoes", camera: new THREE.Vector3(5.25, 2.0, 3.9), target: new THREE.Vector3(4.85, 0.38, -0.42) },
+      { section: "perfil", camera: new THREE.Vector3(4.45, 2.16, 1.75), target: new THREE.Vector3(8.04, 2.1, 1.75) },
+      { section: "sobre", p: 1, camera: new THREE.Vector3(-4.45, 2.14, 2.05), target: new THREE.Vector3(-8.04, 2.08, 2.05) },
+    ] satisfies CameraPathStop[],
     [],
   );
-  const curve = useMemo(
-    () =>
-      new THREE.CatmullRomCurve3([
-        new THREE.Vector3(-7.2, -0.94, 3.45),
-        new THREE.Vector3(-4.7, -0.42, 0.65),
-        new THREE.Vector3(-1.3, -0.28, -2.65),
-        new THREE.Vector3(2.2, -0.35, -3.45),
-        new THREE.Vector3(5.8, -0.72, -0.72),
-      ]),
-    [],
-  );
-  const curvePoints = useMemo(() => curve.getPoints(170), [curve]);
-  const particles = useMemo(() => {
-    const particleCount = compact ? 220 : 700;
-    const positions = new Float32Array(particleCount * 3);
-    for (let index = 0; index < particleCount; index += 1) {
-      const point = curve.getPoint(index / particleCount);
-      positions[index * 3] = point.x + (Math.random() - 0.5) * 5.8;
-      positions[index * 3 + 1] = point.y + Math.random() * 3.2;
-      positions[index * 3 + 2] = point.z + (Math.random() - 0.5) * 4.4;
-    }
-    return positions;
-  }, [compact, curve]);
-
   useFrame(({ camera, pointer, clock }) => {
     const maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
     const progress = gsap.utils.clamp(0, 1, window.scrollY / maxScroll);
-    const { camera: nextCamera, target } = interpolateCamera(cameraPath, progress);
+    const { camera: nextCamera, target } = interpolateCamera(resolveCameraPath(cameraPath, maxScroll), progress);
     nextCamera.x += pointer.x * 0.32;
     nextCamera.y += pointer.y * -0.14;
     camera.position.lerp(nextCamera, reducedMotion ? 1 : 0.075);
@@ -108,15 +89,7 @@ function OfficeWorld({ signalScore, jobCount, applicationCount, compact }: Offic
     if (rootRef.current && !reducedMotion) {
       rootRef.current.rotation.y = Math.sin(elapsed * 0.08) * 0.026;
     }
-    if (ringRef.current) {
-      ringRef.current.rotation.z = reducedMotion ? 0.36 : elapsed * 0.32;
-    }
-    if (particlesRef.current && !reducedMotion) {
-      particlesRef.current.rotation.y = Math.sin(elapsed * 0.11) * 0.05;
-    }
   });
-
-  const nodeCount = Math.max(6, Math.min(16, jobCount + applicationCount + 5));
 
   return (
     <group ref={rootRef}>
@@ -141,33 +114,6 @@ function OfficeWorld({ signalScore, jobCount, applicationCount, compact }: Offic
       {!compact ? <PlantCluster position={[-6.9, -0.52, -4.9]} /> : null}
       {!compact ? <PlantCluster position={[6.5, -0.52, -4.7]} /> : null}
 
-      <Line points={curvePoints} color={red} lineWidth={1.1} transparent opacity={0.66} />
-      <points ref={particlesRef}>
-        <bufferGeometry>
-          <bufferAttribute attach="attributes-position" args={[particles, 3]} />
-        </bufferGeometry>
-        <pointsMaterial color={red} size={0.026} transparent opacity={0.38} depthWrite={false} />
-      </points>
-      <mesh ref={ringRef} position={[-4.75, 1.9, 0.85]} rotation={[1.32, 0.18, 0.34]}>
-        <torusGeometry args={[0.95 + signalScore / 240, 0.013, 10, 142]} />
-        <meshBasicMaterial color={red} transparent opacity={0.42} wireframe />
-      </mesh>
-      {Array.from({ length: compact ? Math.min(8, nodeCount) : nodeCount }).map((_, index) => {
-        const point = curve.getPoint(index / nodeCount);
-        return (
-          <Float key={index} speed={1.15 + index * 0.03} floatIntensity={0.3} rotationIntensity={0.16}>
-            <mesh position={[point.x, point.y + 0.68 + Math.sin(index) * 0.35, point.z]}>
-              <sphereGeometry args={[0.06 + (index % 3) * 0.012, 18, 18]} />
-              <meshStandardMaterial
-                color={index % 3 === 0 ? cyan : red}
-                emissive={index % 3 === 0 ? cyan : red}
-                emissiveIntensity={1.32}
-                roughness={0.28}
-              />
-            </mesh>
-          </Float>
-        );
-      })}
     </group>
   );
 }
@@ -396,9 +342,9 @@ function FloorInlays() {
           [5.9, -0.92, -0.7],
         ]}
         color={cyan}
-        lineWidth={0.75}
+        lineWidth={0.55}
         transparent
-        opacity={0.34}
+        opacity={0.16}
       />
       <Line
         points={[
@@ -409,9 +355,9 @@ function FloorInlays() {
           [5.65, -0.92, -1.05],
         ]}
         color={red}
-        lineWidth={0.9}
+        lineWidth={0.55}
         transparent
-        opacity={0.42}
+        opacity={0.14}
       />
     </group>
   );
@@ -470,35 +416,10 @@ function ClosedBackWall() {
       <RoundedBox args={[16.5, 1.36, 0.08]} radius={0.025} position={[0, 0.14, -7.985]}>
         <meshStandardMaterial color="#222a32" roughness={0.54} metalness={0.3} emissive="#060a0d" emissiveIntensity={0.26} />
       </RoundedBox>
-      {[-7.55, -5.05, -2.55, 0, 2.55, 5.05, 7.55].map((x, index) => (
-        <group key={x} position={[x, 1.15, -7.95]}>
-          <RoundedBox args={[2.1, 3.35, 0.09]} radius={0.018}>
-            <meshStandardMaterial
-              color={index % 2 ? "#2d3640" : "#26303a"}
-              roughness={0.54}
-              metalness={0.3}
-              emissive={index % 2 ? "#070c10" : "#060a0e"}
-              emissiveIntensity={0.32}
-            />
-          </RoundedBox>
-          <mesh position={[0, 0, 0.066]}>
-            <boxGeometry args={[0.035, 3.08, 0.018]} />
-            <meshBasicMaterial color="#333941" transparent opacity={0.38} />
-          </mesh>
-          <mesh position={[0, 1.54, 0.065]}>
-            <boxGeometry args={[1.82, 0.026, 0.018]} />
-            <meshBasicMaterial color={index % 2 ? cyan : red} transparent opacity={0.34} />
-          </mesh>
-          <mesh position={[0, -1.54, 0.065]}>
-            <boxGeometry args={[1.82, 0.026, 0.018]} />
-            <meshBasicMaterial color={index % 2 ? red : cyan} transparent opacity={0.26} />
-          </mesh>
-        </group>
-      ))}
       {[-6.28, -3.76, -1.25, 1.25, 3.76, 6.28].map((x, index) => (
         <mesh key={`rib-${x}`} position={[x, 1.5, -7.84]}>
           <boxGeometry args={[0.05, 4.05, 0.055]} />
-          <meshBasicMaterial color={index % 2 ? cyan : red} transparent opacity={index % 2 ? 0.2 : 0.28} />
+          <meshBasicMaterial color={index % 2 ? cyan : red} transparent opacity={index % 2 ? 0.1 : 0.12} />
         </mesh>
       ))}
       {[-8.04, 8.04].map((x) => (
@@ -539,21 +460,6 @@ function ClosedBackWall() {
 function WallCladding() {
   return (
     <group>
-      {[-6.4, -3.2, 0, 3.2, 6.4].map((x, index) => (
-        <group key={x} position={[x, 1.18, -7.86]}>
-          <RoundedBox args={[1.85, 2.55, 0.045]} radius={0.025}>
-            <meshStandardMaterial color={index % 2 ? "#252b33" : "#1d242b"} roughness={0.58} metalness={0.3} emissive="#030506" emissiveIntensity={0.18} />
-          </RoundedBox>
-          <mesh position={[0, 1.34, 0.035]}>
-            <boxGeometry args={[1.62, 0.018, 0.018]} />
-            <meshBasicMaterial color={index % 2 ? cyan : red} transparent opacity={0.32} />
-          </mesh>
-          <mesh position={[0, -1.34, 0.035]}>
-            <boxGeometry args={[1.62, 0.018, 0.018]} />
-            <meshBasicMaterial color={index % 2 ? red : cyan} transparent opacity={0.22} />
-          </mesh>
-        </group>
-      ))}
       {[-7.2, 7.2].map((x) => (
         <group key={x} position={[x, 1.45, -6.25]} rotation={[0, x < 0 ? 0.18 : -0.18, 0]}>
           <RoundedBox args={[0.72, 2.72, 0.16]} radius={0.035}>
@@ -565,24 +471,6 @@ function WallCladding() {
           </mesh>
         </group>
       ))}
-      <CityReflection />
-    </group>
-  );
-}
-
-function CityReflection() {
-  return (
-    <group position={[0, 2.34, -7.82]}>
-      {Array.from({ length: 24 }).map((_, index) => {
-        const x = -7.4 + index * 0.64;
-        const h = 0.22 + ((index * 17) % 9) * 0.055;
-        return (
-          <mesh key={index} position={[x, -0.42 + h / 2, 0.06]}>
-            <boxGeometry args={[0.2 + (index % 3) * 0.06, h, 0.016]} />
-            <meshBasicMaterial color={index % 4 === 0 ? red : cyan} transparent opacity={index % 4 === 0 ? 0.14 : 0.12} />
-          </mesh>
-        );
-      })}
     </group>
   );
 }
@@ -1271,8 +1159,14 @@ function ShelfUnit({
         <meshStandardMaterial color="#101816" roughness={0.7} metalness={0.04} />
       </mesh>
       <mesh position={[0.44, -0.76, 0.24]}>
-        <octahedronGeometry args={[0.18, 0]} />
-        <meshStandardMaterial color={mirrored ? cyan : red} emissive={mirrored ? cyan : red} emissiveIntensity={0.7} roughness={0.28} />
+        <octahedronGeometry args={[0.12, 0]} />
+        <meshStandardMaterial
+          color={mirrored ? "#24444a" : "#3a1717"}
+          emissive={mirrored ? "#061215" : "#120304"}
+          emissiveIntensity={0.22}
+          roughness={0.46}
+          metalness={0.22}
+        />
       </mesh>
     </group>
   );
@@ -1291,60 +1185,11 @@ function OfficeMicroDetails() {
 function CommandRoomDetails() {
   return (
     <group>
-      <WallScreenArray />
       <SideConsoleWall />
       <UtilityZone />
       <CeilingServiceGrid />
       <SafetyFloorMarks />
       <CareerHologram />
-    </group>
-  );
-}
-
-function WallScreenArray() {
-  return (
-    <group>
-      <RoundedBox args={[11.4, 1.42, 0.08]} radius={0.035} position={[0, 2.42, -8.08]}>
-        <meshStandardMaterial color="#36414c" roughness={0.46} metalness={0.36} emissive="#0b1218" emissiveIntensity={0.42} />
-      </RoundedBox>
-      <mesh position={[0, 3.16, -7.965]}>
-        <boxGeometry args={[10.85, 0.042, 0.038]} />
-        <meshBasicMaterial color={cyan} transparent opacity={0.42} />
-      </mesh>
-      <mesh position={[0, 1.68, -7.965]}>
-        <boxGeometry args={[10.85, 0.038, 0.038]} />
-        <meshBasicMaterial color={red} transparent opacity={0.36} />
-      </mesh>
-      {[
-        { x: -4.75, title: "VAGAS LIVE", variant: "world" },
-        { x: -2.2, title: "PERFIL", variant: "perfil" },
-        { x: 2.2, title: "SOBRE", variant: "sobre" },
-        { x: 4.75, title: "INTEGRACOES", variant: "integracoes" },
-      ].map((screen) => (
-        <group key={screen.title} position={[screen.x, 2.42, -8.0]}>
-          <RoundedBox args={[2.38, 1.32, 0.06]} radius={0.028} position={[0, 0, -0.075]}>
-            <meshStandardMaterial color="#2a333d" roughness={0.48} metalness={0.34} emissive="#080d12" emissiveIntensity={0.36} />
-          </RoundedBox>
-          <mesh position={[0, -0.72, -0.02]}>
-            <boxGeometry args={[0.12, 0.22, 0.08]} />
-            <meshStandardMaterial color="#090b0e" roughness={0.4} metalness={0.68} />
-          </mesh>
-          <mesh position={[0, -0.88, -0.035]}>
-            <boxGeometry args={[1.42, 0.045, 0.06]} />
-            <meshStandardMaterial color="#090b0e" roughness={0.4} metalness={0.68} />
-          </mesh>
-          <PresentationScreen width={1.9} height={0.92} title={screen.title} variant={screen.variant} />
-          <mesh position={[0, -0.58, 0.07]}>
-            <boxGeometry args={[1.72, 0.035, 0.06]} />
-            <meshStandardMaterial color="#08090b" roughness={0.42} metalness={0.64} />
-          </mesh>
-        </group>
-      ))}
-      {[-3.45, -1.15, 1.15, 3.45].map((x, index) => (
-        <group key={x} position={[x, 1.64, -8.02]}>
-          <VentGrille width={0.8} height={0.34} color={index % 2 ? cyan : red} />
-        </group>
-      ))}
     </group>
   );
 }
@@ -1622,33 +1467,34 @@ function WallMountedStatusBoards() {
   return (
     <group>
       {[
-        { x: -8.02, y: 2.05, z: -1.72, r: Math.PI / 2, title: "VAGAS" },
-        { x: 8.02, y: 2.12, z: -0.78, r: -Math.PI / 2, title: "ENVIO" },
+        { x: -8.02, y: 2.05, z: 2.05, r: Math.PI / 2, title: "SOBRE", variant: "sobre" },
+        { x: 8.02, y: 2.12, z: 1.75, r: -Math.PI / 2, title: "PERFIL", variant: "perfil" },
       ].map((panel) => (
         <group key={panel.title} position={[panel.x, panel.y, panel.z]} rotation={[0, panel.r, 0]}>
-          <RoundedBox args={[1.74, 1.04, 0.075]} radius={0.028} position={[0, 0, -0.045]}>
+          <RoundedBox args={[2.22, 1.28, 0.075]} radius={0.028} position={[0, 0, -0.045]}>
             <meshStandardMaterial color="#1d252e" roughness={0.46} metalness={0.36} emissive="#060a0e" emissiveIntensity={0.24} />
           </RoundedBox>
-          <RoundedBox args={[1.58, 0.92, 0.04]} radius={0.025}>
+          <RoundedBox args={[2.02, 1.08, 0.04]} radius={0.025}>
             <meshStandardMaterial color="#071317" roughness={0.22} metalness={0.34} emissive={panel.title === "ENVIO" ? "#280808" : "#08232a"} emissiveIntensity={0.18} />
           </RoundedBox>
-          <mesh position={[0, -0.62, -0.015]}>
-            <boxGeometry args={[1.34, 0.05, 0.055]} />
+          <PresentationScreen width={1.78} height={0.92} title={panel.title} variant={panel.variant} position={[0, 0, 0.04]} />
+          <mesh position={[0, -0.76, -0.015]}>
+            <boxGeometry args={[1.58, 0.05, 0.055]} />
             <meshStandardMaterial color="#08090b" roughness={0.38} metalness={0.62} />
           </mesh>
-          <mesh position={[0, 0.6, -0.015]}>
-            <boxGeometry args={[1.34, 0.035, 0.04]} />
+          <mesh position={[0, 0.74, -0.015]}>
+            <boxGeometry args={[1.7, 0.035, 0.04]} />
             <meshBasicMaterial color={panel.title === "ENVIO" ? red : cyan} transparent opacity={0.38} />
           </mesh>
-          <Text position={[-0.64, 0.3, 0.035]} fontSize={0.08} color={red} anchorX="left">
+          <Text position={[-0.82, 0.38, 0.035]} fontSize={0.08} color={red} anchorX="left">
             {panel.title}
           </Text>
           {[0, 1, 2].map((row) => (
             <Line
               key={row}
               points={[
-                [-0.6, 0.1 - row * 0.22, 0.04],
-                [0.52 - row * 0.12, 0.1 - row * 0.22, 0.04],
+                [-0.78, 0.12 - row * 0.22, 0.04],
+                [0.72 - row * 0.12, 0.12 - row * 0.22, 0.04],
               ]}
               color={row % 2 ? cyan : red}
               lineWidth={1.2}
@@ -1946,6 +1792,31 @@ function makeNoiseTexture(base: string, accent: string, alpha: number) {
   texture.colorSpace = THREE.SRGBColorSpace;
   texture.anisotropy = 8;
   return texture;
+}
+
+function resolveCameraPath(path: CameraPathStop[], maxScroll: number) {
+  const focusLine = window.innerHeight * 0.56;
+  let lastProgress = -0.025;
+
+  return path
+    .map((stop, index) => {
+      const section = stop.section ? document.getElementById(stop.section) : null;
+      const fallbackProgress = stop.p ?? index / Math.max(1, path.length - 1);
+      if (!section) {
+        return { ...stop, p: fallbackProgress };
+      }
+
+      const rect = section.getBoundingClientRect();
+      const sectionCenter = rect.top + window.scrollY + rect.height * 0.5;
+      const progress = gsap.utils.clamp(0, 1, (sectionCenter - focusLine) / maxScroll);
+      return { ...stop, p: stop.p ?? progress };
+    })
+    .sort((first, second) => first.p - second.p)
+    .map((stop) => {
+      const p = Math.max(stop.p, lastProgress + 0.025);
+      lastProgress = p;
+      return { ...stop, p: gsap.utils.clamp(0, 1, p) };
+    });
 }
 
 function interpolateCamera(path: Array<{ p: number; camera: THREE.Vector3; target: THREE.Vector3 }>, progress: number) {

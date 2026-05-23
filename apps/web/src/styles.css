@@ -35,6 +35,8 @@ html {
   min-width: 320px;
   background: var(--vt-bg);
   scroll-behavior: smooth;
+  scroll-padding-top: 110px;
+  scroll-snap-type: y mandatory;
   overflow-x: clip;
 }
 
@@ -157,17 +159,21 @@ strong {
   right: 0;
   z-index: 30;
   display: grid;
-  grid-template-columns: minmax(180px, 0.75fr) minmax(420px, 1.5fr) minmax(260px, 0.85fr);
-  gap: 22px;
-  align-items: center;
-  min-height: 78px;
-  padding: 16px 34px;
+  grid-template-areas:
+    "brand status"
+    "nav nav";
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 8px 20px;
+  align-items: start;
+  min-height: 112px;
+  padding: 12px 56px 10px 58px;
   border-bottom: 1px solid var(--vt-line-soft);
   background: linear-gradient(180deg, rgba(2, 2, 2, 0.82), rgba(2, 2, 2, 0.35));
   backdrop-filter: blur(18px);
 }
 
 .brand-lockup {
+  grid-area: brand;
   display: inline-grid;
   grid-template-columns: 48px minmax(0, 1fr);
   gap: 14px;
@@ -232,22 +238,29 @@ strong {
 }
 
 .nav-list {
+  grid-area: nav;
   display: flex;
-  justify-content: center;
-  gap: 10px;
+  justify-content: flex-start;
+  gap: 8px;
   min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.nav-list::-webkit-scrollbar {
+  display: none;
 }
 
 .nav-list a {
   position: relative;
   display: inline-flex;
-  min-height: 38px;
+  min-height: 30px;
   align-items: center;
-  gap: 9px;
-  padding: 0 13px;
+  gap: 8px;
+  padding: 0 9px;
   color: var(--vt-muted);
   font-family: var(--vt-font-ui);
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 800;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -273,11 +286,14 @@ strong {
 }
 
 .status-cluster {
+  grid-area: status;
   display: flex;
   align-items: center;
   justify-content: flex-end;
   gap: 10px;
   min-width: 0;
+  justify-self: end;
+  align-self: start;
 }
 
 .api-pill,
@@ -309,7 +325,7 @@ strong {
 
 .api-pill {
   display: inline-flex;
-  min-height: 40px;
+  min-height: 36px;
   align-items: center;
   justify-content: center;
   padding: 0 15px;
@@ -333,14 +349,14 @@ strong {
 }
 
 .auth-button {
-  min-height: 40px;
+  min-height: 36px;
   padding: 0 16px;
 }
 
 .icon-button {
   display: grid;
-  width: 42px;
-  height: 42px;
+  width: 38px;
+  height: 38px;
   place-items: center;
   padding: 0;
 }
@@ -404,6 +420,8 @@ strong {
   align-items: center;
   padding: 126px 58px 76px 142px;
   scroll-margin-top: 110px;
+  scroll-snap-align: center;
+  scroll-snap-stop: always;
 }
 
 .hero-section {
@@ -754,16 +772,23 @@ strong {
 }
 
 .station-gate {
-  position: absolute;
+  position: fixed;
+  left: var(--gate-x, 50%);
+  top: var(--gate-y, 50%);
+  z-index: 29;
   display: flex;
   width: auto;
-  align-self: center;
   margin: 0;
   border: 0;
   background: transparent;
   padding: 0;
   box-shadow: none;
-  transform: translate3d(0, 0, 0);
+  opacity: 0;
+  filter: none;
+  pointer-events: none;
+  transform: translate(-50%, -50%) scale(0.98);
+  will-change: opacity, transform;
+  transition: transform 160ms var(--vt-ease);
 }
 
 .station-gate::before {
@@ -789,9 +814,8 @@ strong {
 }
 
 .station-gate--radar {
-  left: 30%;
-  top: 58%;
-  transform: translateY(-50%);
+  --gate-x: 58%;
+  --gate-y: 57%;
 }
 
 .station-gate--radar::before,
@@ -811,9 +835,8 @@ strong {
 }
 
 .station-gate--curriculo {
-  left: 27%;
-  top: 61%;
-  transform: translateY(-50%);
+  --gate-x: 56%;
+  --gate-y: 55%;
 }
 
 .station-gate--curriculo::before {
@@ -826,27 +849,30 @@ strong {
 }
 
 .station-gate--kanban {
-  left: 59%;
-  top: 55%;
-  transform: translateY(-50%);
+  --gate-x: 62%;
+  --gate-y: 58%;
 }
 
 .station-gate--integracoes {
-  left: 76%;
-  top: 56%;
-  transform: translateY(-50%);
+  --gate-x: 78%;
+  --gate-y: 60%;
 }
 
 .station-gate--perfil {
-  left: 41%;
-  top: 39%;
-  transform: translateY(-50%);
+  --gate-x: 52%;
+  --gate-y: 58%;
 }
 
 .station-gate--sobre {
-  left: 59%;
-  top: 39%;
-  transform: translateY(-50%);
+  --gate-x: 52%;
+  --gate-y: 58%;
+}
+
+.station-gate.is-focused {
+  opacity: 1;
+  filter: blur(0);
+  pointer-events: auto;
+  transform: translate(-50%, -50%) scale(1);
 }
 
 .station-gate.is-active {
@@ -856,6 +882,7 @@ strong {
 
 .station-access,
 .workspace-dock button {
+  position: relative;
   display: inline-flex;
   min-height: 46px;
   align-items: center;
@@ -873,6 +900,20 @@ strong {
   text-transform: uppercase;
   box-shadow: var(--vt-red-shadow);
   padding: 0 18px;
+  overflow: hidden;
+}
+
+.station-access::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 -80%;
+  width: 62%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.34), transparent);
+  transform: skewX(-18deg);
+}
+
+.station-gate.is-focused .station-access::before {
+  animation: station-hud-scan 780ms 120ms linear both;
 }
 
 .station-access:hover,
@@ -1758,6 +1799,29 @@ textarea:focus {
   }
 }
 
+@keyframes station-hud-scan {
+  from {
+    left: -80%;
+  }
+
+  to {
+    left: 135%;
+  }
+}
+
+@keyframes monitorPulse {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: scale(0.86) rotate(0deg);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.12) rotate(45deg);
+  }
+}
+
 @keyframes boot-scan {
   from {
     transform: translateY(-36vh);
@@ -1792,24 +1856,24 @@ textarea:focus {
 
 @media (max-width: 1240px) {
   .experience-nav {
-    grid-template-columns: 1fr;
-    gap: 12px;
-    padding: 14px 22px;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 8px 16px;
+    padding: 12px 42px 10px 56px;
   }
 
   .nav-list {
     justify-content: flex-start;
     overflow-x: auto;
-    padding-bottom: 4px;
+    padding-bottom: 0;
   }
 
   .status-cluster {
-    justify-content: flex-start;
-    flex-wrap: wrap;
+    justify-content: flex-end;
+    flex-wrap: nowrap;
   }
 
   .scene-section {
-    padding: 176px 28px 72px 102px;
+    padding: 142px 28px 72px 102px;
   }
 
   .scene-rail {
@@ -1849,9 +1913,30 @@ textarea:focus {
     background: linear-gradient(180deg, rgba(0, 0, 0, 0.24), rgba(0, 0, 0, 0.76));
   }
 
+  .experience-shell {
+    scroll-snap-type: none;
+  }
+
+  html {
+    scroll-padding-top: 0;
+    scroll-snap-type: none;
+  }
+
   .experience-nav {
     position: sticky;
+    grid-template-areas:
+      "brand"
+      "status"
+      "nav";
+    grid-template-columns: 1fr;
     min-height: 0;
+    padding: 14px 22px;
+  }
+
+  .status-cluster {
+    justify-self: start;
+    justify-content: flex-start;
+    flex-wrap: wrap;
   }
 
   .brand-lockup {
@@ -1885,6 +1970,8 @@ textarea:focus {
     min-height: auto;
     padding: 58px 16px 72px;
     scroll-margin-top: 24px;
+    scroll-snap-align: none;
+    scroll-snap-stop: normal;
   }
 
   .office-webgl {
@@ -1966,6 +2053,10 @@ textarea:focus {
     justify-self: stretch;
     margin: 20px 0 0;
     padding: 18px;
+    transform: none;
+  }
+
+  .station-gate.is-focused {
     transform: none;
   }
 

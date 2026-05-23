@@ -1,5 +1,7 @@
 import { expect, test } from "@playwright/test";
 
+test.use({ trace: "off" });
+
 test("renders production radar without demo data", async ({ page }, testInfo) => {
   test.setTimeout(90_000);
   const messages: string[] = [];
@@ -11,7 +13,7 @@ test("renders production radar without demo data", async ({ page }, testInfo) =>
 
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/", { waitUntil: "domcontentloaded" });
-  await page.addStyleTag({ content: "html { scroll-behavior: auto !important; } .boot-overlay { display: none !important; }" });
+  await page.addStyleTag({ content: "html { scroll-behavior: auto !important; scroll-snap-type: none !important; } .scene-section { scroll-snap-align: none !important; } .boot-overlay { display: none !important; }" });
   await expect(page.locator("h1")).toContainText("Vitaey");
   await expect(page.locator(".hero-copy h2")).toContainText("VITAEY");
   await expect(page.locator(".office-webgl, .office-webgl-fallback").first()).toBeVisible();
@@ -40,7 +42,7 @@ test("renders production radar without demo data", async ({ page }, testInfo) =>
     { id: "kanban", label: "Abrir pipeline", monitor: "Pipeline" },
     { id: "integracoes", label: "Abrir integrações", monitor: "Integrações" },
     { id: "perfil", label: "Abrir perfil", monitor: "Perfil" },
-    { id: "sobre", label: "Abrir sobre", monitor: "Sobre" },
+    { id: "sobre", label: "Abrir sobre nós", monitor: "Sobre" },
   ];
 
   const stationState = await page.evaluate(() =>
@@ -82,6 +84,8 @@ test("renders production radar without demo data", async ({ page }, testInfo) =>
 
   if (testInfo.project.name === "mobile") {
     await expect(page.locator(".opportunity-console")).toHaveCount(0);
+    await scrollStationIntoFocus(page, "radar");
+    await page.waitForTimeout(180);
     await expect(page.locator("section#radar button.station-access")).toBeVisible();
     expect(messages.filter((message) => !isIgnoredConsoleMessage(message))).toEqual([]);
     return;
@@ -99,6 +103,8 @@ test("renders production radar without demo data", async ({ page }, testInfo) =>
     expect(initialBodyText).not.toContain(demoText);
   }
   await expect(page.locator(".opportunity-console")).toHaveCount(0);
+  await scrollStationIntoFocus(page, "radar");
+  await page.waitForTimeout(180);
   await expect(page.locator("section#radar button.station-access")).toBeVisible();
 
   await page.locator("section#radar button.station-access").evaluate((button) => {
@@ -139,11 +145,13 @@ test("renders production radar without demo data", async ({ page }, testInfo) =>
 
 test("opens the matching workspace from each monitor button", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name === "mobile", "Desktop covers station-to-monitor interaction.");
-  test.setTimeout(150_000);
+  test.setTimeout(240_000);
 
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/", { waitUntil: "domcontentloaded" });
-  await page.addStyleTag({ content: "html { scroll-behavior: auto !important; } .boot-overlay { display: none !important; }" });
+  await page.addStyleTag({ content: "html { scroll-behavior: auto !important; scroll-snap-type: none !important; } .scene-section { scroll-snap-align: none !important; } .boot-overlay { display: none !important; }" });
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.waitForTimeout(250);
 
   const stations = [
     { id: "curriculo", button: "Abrir currículo", workspace: ".profile-workbench" },
@@ -151,31 +159,59 @@ test("opens the matching workspace from each monitor button", async ({ page }, t
     { id: "kanban", button: "Abrir pipeline", workspace: ".kanban-grid" },
     { id: "integracoes", button: "Abrir integrações", workspace: ".integrations-workspace" },
     { id: "perfil", button: "Abrir perfil", workspace: ".profile-station" },
-    { id: "sobre", button: "Abrir sobre", workspace: ".about-workspace" },
+    { id: "sobre", button: "Abrir sobre nós", workspace: ".about-workspace" },
   ];
 
   for (const station of stations) {
+    await scrollStationIntoFocus(page, station.id);
+    await page.waitForFunction(
+      (id) => document.querySelector(`section#${id} .station-gate`)?.classList.contains("is-focused"),
+      station.id,
+      { timeout: 30_000 },
+    );
+
     const result = await page.evaluate(async ({ id, workspace }) => {
-      document.getElementById(id)?.scrollIntoView({ block: "center", inline: "nearest" });
-      await new Promise((resolve) => window.setTimeout(resolve, 80));
       const button = document.querySelector(`section#${id} button.station-access`);
+      const gate = button?.closest(".station-gate");
       const label = button?.textContent?.replace(/\s+/g, " ").trim() ?? "";
       if (button instanceof HTMLButtonElement) button.click();
-      await new Promise((resolve) => window.setTimeout(resolve, 120));
+      await new Promise<void>((resolve) => {
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+      });
       return {
+        focused: gate?.classList.contains("is-focused") ?? false,
         label,
-        workspace: Boolean(document.querySelector(`[data-station-workspace="${id}"]`)),
-        inner: Boolean(document.querySelector(`[data-station-workspace="${id}"] ${workspace}`)),
+        workspaceMounted: Boolean(document.querySelector(`[data-station-workspace="${id}"] ${workspace}`)),
       };
-    }, station);
+    }, { id: station.id, workspace: station.workspace });
 
     expect(result).toEqual({
+      focused: true,
       label: station.button,
-      workspace: true,
-      inner: true,
+      workspaceMounted: true,
     });
+    const closed = await page.evaluate(async (id) => {
+      const closeButton = document.querySelector(`[data-station-workspace="${id}"] .workspace-dock button`);
+      if (closeButton instanceof HTMLButtonElement) closeButton.click();
+      await new Promise<void>((resolve) => {
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+      });
+      return !document.querySelector(`[data-station-workspace="${id}"]`);
+    }, station.id);
+    expect(closed).toBe(true);
   }
 });
+
+async function scrollStationIntoFocus(page: import("@playwright/test").Page, id: string) {
+  await page.evaluate((stationId) => {
+    const section = document.getElementById(stationId);
+    if (!section) return;
+    const rect = section.getBoundingClientRect();
+    const target = rect.top + window.scrollY + rect.height * 0.5 - window.innerHeight * 0.56;
+    window.scrollTo(0, Math.max(0, target));
+    window.dispatchEvent(new Event("scroll"));
+  }, id);
+}
 
 function isIgnoredConsoleMessage(message: string) {
   return (

@@ -202,6 +202,78 @@ test("opens the matching workspace from each monitor button", async ({ page }, t
   }
 });
 
+test("wheel scroll pauses on each monitor station", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name === "mobile", "Desktop covers stepped monitor scroll.");
+  test.setTimeout(180_000);
+
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/", { waitUntil: "domcontentloaded" });
+  await page.addStyleTag({ content: ".boot-overlay { display: none !important; }" });
+  await expect(page.locator(".office-webgl, .office-webgl-fallback").first()).toBeVisible();
+  await expect(page.locator(".station-gate")).toHaveCount(6);
+  await page.evaluate(async () => {
+    document.documentElement.style.scrollBehavior = "auto";
+    document.documentElement.style.scrollSnapType = "none";
+    window.scrollTo(0, 0);
+    window.dispatchEvent(new Event("scroll"));
+    await new Promise<void>((resolve) => {
+      requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+    });
+    document.documentElement.style.scrollSnapType = "";
+    document.documentElement.style.scrollBehavior = "";
+  });
+  await page.waitForFunction(() => window.scrollY <= 2 && !document.querySelector(".station-gate.is-focused"));
+  await page.waitForTimeout(1500);
+
+  const stations = [
+    { id: "curriculo", button: "Abrir currículo" },
+    { id: "radar", button: "Abrir radar" },
+    { id: "kanban", button: "Abrir pipeline" },
+    { id: "integracoes", button: "Abrir integrações" },
+    { id: "perfil", button: "Abrir perfil" },
+    { id: "sobre", button: "Abrir sobre nós" },
+  ];
+
+  for (const station of stations) {
+    await dispatchStepperWheel(page);
+    await expect
+      .poll(() => readFocusedStation(page), {
+        intervals: [250, 500, 1000],
+        timeout: 30_000,
+      })
+      .toEqual([
+        expect.objectContaining({
+          className: expect.stringContaining(`station-gate--${station.id}`),
+          label: station.button,
+        }),
+      ]);
+  }
+});
+
+function readFocusedStation(page: import("@playwright/test").Page) {
+  return page.evaluate(() =>
+    Array.from(document.querySelectorAll(".station-gate.is-focused")).map((gate) => ({
+      className: gate.className,
+      label: gate.textContent?.replace(/\s+/g, " ").trim(),
+    })),
+  );
+}
+
+async function dispatchStepperWheel(page: import("@playwright/test").Page) {
+  const consumed = await page.evaluate(async () => {
+    for (let attempt = 0; attempt < 10; attempt += 1) {
+      const wasPrevented = !window.dispatchEvent(
+        new WheelEvent("wheel", { deltaY: 900, bubbles: true, cancelable: true }),
+      );
+      if (wasPrevented) return true;
+      await new Promise((resolve) => window.setTimeout(resolve, 180));
+    }
+    return false;
+  });
+
+  expect(consumed).toBe(true);
+}
+
 async function scrollStationIntoFocus(page: import("@playwright/test").Page, id: string) {
   await page.evaluate((stationId) => {
     const section = document.getElementById(stationId);

@@ -92,6 +92,11 @@ const emptyIntegrationLinks: IntegrationLinks = {
 };
 
 const stationSectionIds: StationId[] = ["curriculo", "radar", "kanban", "integracoes", "perfil", "sobre"];
+const scrollStopIds = ["dashboard", ...stationSectionIds];
+
+function isStationId(id: string): id is StationId {
+  return stationSectionIds.includes(id as StationId);
+}
 
 function App() {
   const [query, setQuery] = useState("");
@@ -202,84 +207,124 @@ function App() {
   }, [jobs, selectedJob]);
 
   useEffect(() => {
+    let measureFrame = 0;
     let settleTimer = 0;
-    let lateSettleTimer = 0;
-    let pollTimer = 0;
-    let lastScrollY = window.scrollY;
-    let lastScrollAt = performance.now();
+    let stepReleaseTimer = 0;
+    let isStepping = false;
+    let lastWheelAt = 0;
 
-    const measureFocusedStation = () => {
-      const focusLine = window.innerHeight * 0.56;
-      const activationDistance = Math.max(42, Math.min(96, window.innerHeight * 0.12));
-      let nextStation: StationId | null = null;
+    const isDesktopStepper = () => window.matchMedia("(min-width: 841px)").matches;
+
+    const setFocusFromStop = (id: string | null) => {
+      setFocusedStation(id && isStationId(id) ? id : null);
+    };
+
+    const findClosestStopIndex = () => {
+      const focusY = window.scrollY + window.innerHeight * 0.56;
+      let closestIndex = 0;
       let closestDistance = Number.POSITIVE_INFINITY;
 
-      for (const id of stationSectionIds) {
+      scrollStopIds.forEach((id, index) => {
         const section = document.getElementById(id);
-        if (!section) continue;
+        if (!section) return;
 
         const rect = section.getBoundingClientRect();
-        const hasViewportOverlap = rect.top < window.innerHeight * 0.82 && rect.bottom > window.innerHeight * 0.18;
-        if (!hasViewportOverlap) continue;
-
-        const sectionCenter = rect.top + rect.height * 0.5;
-        const distance = Math.abs(sectionCenter - focusLine);
+        const sectionCenter = rect.top + window.scrollY + rect.height * 0.5;
+        const distance = Math.abs(sectionCenter - focusY);
         if (distance < closestDistance) {
           closestDistance = distance;
-          nextStation = id;
+          closestIndex = index;
         }
-      }
+      });
 
-      setFocusedStation(closestDistance <= activationDistance ? nextStation : null);
+      return closestIndex;
     };
 
-    const noteScrollMovement = () => {
-      lastScrollAt = performance.now();
-      lastScrollY = window.scrollY;
+    const measureFocusedStation = () => {
+      const currentStop = scrollStopIds[findClosestStopIndex()] ?? null;
+      setFocusFromStop(currentStop);
+    };
+
+    const scrollToStop = (index: number) => {
+      const boundedIndex = Math.max(0, Math.min(scrollStopIds.length - 1, index));
+      const stopId = scrollStopIds[boundedIndex];
+      const section = document.getElementById(stopId);
+      if (!section) return;
+
+      const rect = section.getBoundingClientRect();
+      const target = rect.top + window.scrollY + rect.height * 0.5 - window.innerHeight * 0.56;
+      isStepping = true;
       setFocusedStation(null);
-    };
-
-    const pollSettledFocus = () => {
-      const currentScrollY = window.scrollY;
-      if (Math.abs(currentScrollY - lastScrollY) > 0.5) {
-        lastScrollY = currentScrollY;
-        lastScrollAt = performance.now();
-        setFocusedStation(null);
-        return;
-      }
-
-      if (performance.now() - lastScrollAt >= 220) {
-        measureFocusedStation();
-      }
-    };
-
-    const scheduleSettledFocus = () => {
-      noteScrollMovement();
       window.clearTimeout(settleTimer);
-      window.clearTimeout(lateSettleTimer);
-      settleTimer = window.setTimeout(() => {
-        window.requestAnimationFrame(measureFocusedStation);
-      }, 260);
-      lateSettleTimer = window.setTimeout(() => {
-        window.requestAnimationFrame(measureFocusedStation);
-      }, 700);
+      window.clearTimeout(stepReleaseTimer);
+      window.scrollTo({
+        top: Math.max(0, target),
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+      });
+
+      stepReleaseTimer = window.setTimeout(() => {
+        isStepping = false;
+        setFocusFromStop(stopId);
+      }, 760);
     };
 
-    settleTimer = window.setTimeout(measureFocusedStation, 180);
-    pollTimer = window.setInterval(pollSettledFocus, 120);
-    window.addEventListener("scroll", scheduleSettledFocus, { passive: true });
+    const canIgnoreWheelTarget = (target: EventTarget | null) => {
+      if (!(target instanceof Element)) return false;
+      if (target.closest(".station-workspace, .apply-modal, input, textarea, select, [contenteditable='true']")) {
+        return true;
+      }
+
+      const scrollable = target.closest("[data-scroll-lock], .opportunity-list, .details-panel, .station-workspace");
+      if (!(scrollable instanceof HTMLElement)) return false;
+      return scrollable.scrollHeight > scrollable.clientHeight;
+    };
+
+    const handleWheel = (event: WheelEvent) => {
+      if (!isDesktopStepper() || activeStation || event.ctrlKey || Math.abs(event.deltaY) < 8) return;
+      if (canIgnoreWheelTarget(event.target)) return;
+
+      event.preventDefault();
+      if (isStepping) return;
+
+      const now = performance.now();
+      if (now - lastWheelAt < 280) return;
+      lastWheelAt = now;
+
+      const direction = event.deltaY > 0 ? 1 : -1;
+      const currentIndex = findClosestStopIndex();
+      scrollToStop(currentIndex + direction);
+    };
+
+    const scheduleFocusedStation = () => {
+      if (isStepping) return;
+      if (measureFrame) {
+        window.cancelAnimationFrame(measureFrame);
+      }
+      window.clearTimeout(settleTimer);
+      measureFrame = window.requestAnimationFrame(() => {
+        measureFrame = 0;
+        settleTimer = window.setTimeout(measureFocusedStation, 90);
+      });
+    };
+
+    scheduleFocusedStation();
+    window.addEventListener("wheel", handleWheel, { passive: false });
+    window.addEventListener("scroll", scheduleFocusedStation, { passive: true });
     window.addEventListener("scrollend", measureFocusedStation);
-    window.addEventListener("resize", scheduleSettledFocus);
+    window.addEventListener("resize", scheduleFocusedStation);
 
     return () => {
+      if (measureFrame) {
+        window.cancelAnimationFrame(measureFrame);
+      }
       window.clearTimeout(settleTimer);
-      window.clearTimeout(lateSettleTimer);
-      window.clearInterval(pollTimer);
-      window.removeEventListener("scroll", scheduleSettledFocus);
+      window.clearTimeout(stepReleaseTimer);
+      window.removeEventListener("wheel", handleWheel);
+      window.removeEventListener("scroll", scheduleFocusedStation);
       window.removeEventListener("scrollend", measureFocusedStation);
-      window.removeEventListener("resize", scheduleSettledFocus);
+      window.removeEventListener("resize", scheduleFocusedStation);
     };
-  }, []);
+  }, [activeStation]);
 
   const filteredJobs = useMemo(() => {
     return jobs.filter((job) => {

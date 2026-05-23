@@ -394,10 +394,10 @@ function RoomSeams() {
           </mesh>
         </group>
       ))}
-      {[-6.15, -3.05, 0, 3.05, 6.15].map((x, index) => (
+      {[-6.15, -3.05, 0, 3.05, 6.15].map((x) => (
         <mesh key={x} position={[x, 1.4, -7.77]}>
           <boxGeometry args={[0.035, 3.65, 0.04]} />
-          <meshBasicMaterial color={index % 2 ? cyan : red} transparent opacity={index % 2 ? 0.28 : 0.38} />
+          <meshStandardMaterial color="#151c23" roughness={0.48} metalness={0.52} emissive="#030607" emissiveIntensity={0.2} />
         </mesh>
       ))}
     </group>
@@ -416,10 +416,10 @@ function ClosedBackWall() {
       <RoundedBox args={[16.5, 1.36, 0.08]} radius={0.025} position={[0, 0.14, -7.985]}>
         <meshStandardMaterial color="#222a32" roughness={0.54} metalness={0.3} emissive="#060a0d" emissiveIntensity={0.26} />
       </RoundedBox>
-      {[-6.28, -3.76, -1.25, 1.25, 3.76, 6.28].map((x, index) => (
+      {[-6.28, -3.76, -1.25, 1.25, 3.76, 6.28].map((x) => (
         <mesh key={`rib-${x}`} position={[x, 1.5, -7.84]}>
           <boxGeometry args={[0.05, 4.05, 0.055]} />
-          <meshBasicMaterial color={index % 2 ? cyan : red} transparent opacity={index % 2 ? 0.1 : 0.12} />
+          <meshStandardMaterial color="#18222b" roughness={0.5} metalness={0.5} emissive="#04080b" emissiveIntensity={0.18} />
         </mesh>
       ))}
       {[-8.04, 8.04].map((x) => (

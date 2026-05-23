@@ -790,12 +790,12 @@ strong {
 }
 
 .station-gate--curriculo::before {
-  left: 100%;
-  background: linear-gradient(90deg, var(--vt-red), transparent);
+  right: 100%;
+  background: linear-gradient(90deg, transparent, var(--vt-red));
 }
 
 .station-gate--curriculo::after {
-  left: calc(100% + 88px);
+  right: calc(100% + 88px);
 }
 
 .station-gate--kanban {

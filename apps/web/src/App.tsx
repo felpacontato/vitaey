@@ -359,8 +359,8 @@ function App() {
         </a>
         <nav className="nav-list" aria-label="Navegação principal">
           <a className="active" href="#dashboard"><LayoutDashboard /> Visão geral</a>
-          <a href="#vagas"><BriefcaseBusiness /> Vagas</a>
           <a href="#curriculo"><FileText /> Currículo</a>
+          <a href="#vagas"><BriefcaseBusiness /> Vagas</a>
           <a href="#kanban"><ShieldCheck /> Candidaturas</a>
         </nav>
         <div className="status-cluster">
@@ -384,8 +384,8 @@ function App() {
 
       <aside className="scene-rail" aria-label="Progresso da experiência">
         <a href="#dashboard"><span /> Lobby</a>
-        <a href="#vagas"><span /> Radar</a>
         <a href="#curriculo"><span /> Currículo</a>
+        <a href="#vagas"><span /> Radar</a>
         <a href="#kanban"><span /> Pipeline</a>
       </aside>
 
@@ -438,7 +438,7 @@ function App() {
 
       <section className="scene-section jobs-section" id="vagas" aria-label="Vagas recomendadas">
         <div className="section-frame section-intro">
-          <span className="section-kicker">Estação 01 // Radar</span>
+          <span className="section-kicker">Estação 02 // Radar</span>
           <h2>Vagas recomendadas</h2>
           <p>
             {jobs.length
@@ -450,10 +450,8 @@ function App() {
         <StationGate
           id="vagas"
           activeStation={activeStation}
-          station="Monitor Radar"
-          title="Acessar radar de vagas"
-          copy="Abra esta estação quando a câmera chegar aos monitores de vagas para filtrar oportunidades e revisar compatibilidade."
-          buttonLabel="Acessar vagas"
+          station="Radar"
+          buttonLabel="Abrir radar"
           onOpen={openStation}
         />
 
@@ -596,7 +594,7 @@ function App() {
 
       <section className="scene-section resume-section" id="curriculo" aria-label="Currículo e preferências">
         <div className="section-frame section-intro">
-          <span className="section-kicker">Estação 02 // Currículo</span>
+          <span className="section-kicker">Estação 01 // Currículo</span>
           <h2>Currículo e preferências</h2>
           <p>{sessionEmail ? sessionEmail : "Entre para manter o perfil sincronizado com segurança."}</p>
         </div>
@@ -604,9 +602,7 @@ function App() {
         <StationGate
           id="curriculo"
           activeStation={activeStation}
-          station="Tela Currículo"
-          title="Acessar edição de currículo"
-          copy="Quando a câmera se aproxima do monitor Currículo, abra a bancada para ajustar perfil, skills e preferências."
+          station="Currículo"
           buttonLabel="Abrir currículo"
           onOpen={openStation}
         />
@@ -742,9 +738,7 @@ function App() {
         <StationGate
           id="kanban"
           activeStation={activeStation}
-          station="Monitor Perfil / Pipeline"
-          title="Acessar pipeline"
-          copy="Na mesa do monitor Perfil, abra a estação para acompanhar candidaturas, etapas e histórico."
+          station="Pipeline"
           buttonLabel="Abrir pipeline"
           onOpen={openStation}
         />
@@ -828,16 +822,12 @@ function StationGate({
   id,
   activeStation,
   station,
-  title,
-  copy,
   buttonLabel,
   onOpen,
 }: {
   id: StationId;
   activeStation: StationId | null;
   station: string;
-  title: string;
-  copy: string;
   buttonLabel: string;
   onOpen: (station: StationId) => void;
 }) {
@@ -845,11 +835,13 @@ function StationGate({
 
   return (
     <div className={`station-gate station-gate--${id} ${isActive ? "is-active" : ""}`}>
-      <span className="monitor-lock" aria-hidden="true">Monitor conectado</span>
-      <span className="section-kicker">{station}</span>
-      <strong>{title}</strong>
-      <p>{copy}</p>
-      <button className="station-access" type="button" onClick={() => onOpen(id)} aria-expanded={isActive}>
+      <button
+        className="station-access"
+        type="button"
+        onClick={() => onOpen(id)}
+        aria-expanded={isActive}
+        aria-label={`${buttonLabel} no monitor ${station}`}
+      >
         {isActive ? "Estação aberta" : buttonLabel}
         <ArrowRight />
       </button>

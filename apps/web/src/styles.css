@@ -114,6 +114,8 @@ strong {
 .experience-shell {
   position: relative;
   z-index: 2;
+  display: flex;
+  flex-direction: column;
   min-height: 100vh;
   isolation: isolate;
   overflow-x: clip;
@@ -364,7 +366,7 @@ strong {
   left: 34px;
   top: 50%;
   z-index: 24;
-  display: grid;
+  display: none;
   gap: 20px;
   transform: translateY(-50%);
 }
@@ -402,6 +404,26 @@ strong {
   align-items: center;
   padding: 126px 58px 76px 142px;
   scroll-margin-top: 110px;
+}
+
+.hero-section {
+  order: 1;
+}
+
+.auth-notice {
+  order: 2;
+}
+
+.resume-section {
+  order: 3;
+}
+
+.jobs-section {
+  order: 4;
+}
+
+.pipeline-section {
+  order: 5;
 }
 
 .section-frame,
@@ -683,21 +705,43 @@ strong {
   max-width: 620px;
 }
 
+.jobs-section > .section-intro,
+.resume-section > .section-intro,
+.pipeline-section > .section-intro {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  max-width: 1px;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.jobs-section > .section-intro::before,
+.jobs-section > .section-intro::after,
+.resume-section > .section-intro::before,
+.resume-section > .section-intro::after,
+.pipeline-section > .section-intro::before,
+.pipeline-section > .section-intro::after {
+  display: none;
+}
+
 .station-gate {
   position: absolute;
-  display: grid;
-  width: min(330px, calc(100vw - 48px));
-  gap: 8px;
+  display: flex;
+  width: auto;
   align-self: center;
   margin: 0;
-  border: 1px solid var(--vt-red-line);
-  background:
-    linear-gradient(90deg, rgba(255, 42, 42, 0.08), transparent 1px),
-    linear-gradient(rgba(255, 255, 255, 0.035), transparent 1px),
-    rgba(3, 3, 4, 0.92);
-  background-size: 42px 100%, 100% 42px, auto;
-  padding: 14px 16px 16px;
-  box-shadow: var(--vt-shadow), var(--vt-red-shadow);
+  border: 0;
+  background: transparent;
+  padding: 0;
+  box-shadow: none;
   transform: translate3d(0, 0, 0);
 }
 
@@ -724,9 +768,9 @@ strong {
 }
 
 .station-gate--vagas {
-  left: 65%;
-  top: 53%;
-  transform: translate(-34%, -50%);
+  left: 57%;
+  top: 57%;
+  transform: translateY(-50%);
 }
 
 .station-gate--vagas::before,
@@ -740,8 +784,8 @@ strong {
 }
 
 .station-gate--curriculo {
-  left: 18%;
-  top: 66%;
+  left: 27%;
+  top: 61%;
   transform: translateY(-50%);
 }
 
@@ -755,47 +799,9 @@ strong {
 }
 
 .station-gate--kanban {
-  right: 7%;
-  top: 52%;
+  left: 67%;
+  top: 55%;
   transform: translateY(-50%);
-}
-
-@keyframes monitorPulse {
-  0%,
-  100% {
-    opacity: 0.52;
-    transform: scale(0.9);
-  }
-
-  50% {
-    opacity: 1;
-    transform: scale(1.12);
-  }
-}
-
-.station-gate strong {
-  color: var(--vt-ink);
-  font-family: var(--vt-font-display);
-  font-size: 1.55rem;
-  font-weight: 500;
-  line-height: 1;
-}
-
-.station-gate p {
-  margin: 0;
-  color: var(--vt-muted);
-  font-family: var(--vt-font-ui);
-  font-size: 0.8rem;
-  line-height: 1.45;
-}
-
-.monitor-lock {
-  color: var(--vt-cyan);
-  font-family: var(--vt-font-ui);
-  font-size: 0.58rem;
-  font-weight: 900;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
 }
 
 .station-gate.is-active {
@@ -806,18 +812,22 @@ strong {
 .station-access,
 .workspace-dock button {
   display: inline-flex;
-  min-height: 42px;
+  min-height: 46px;
   align-items: center;
   justify-content: center;
   gap: 10px;
   border: 1px solid var(--vt-red);
-  background: rgba(255, 42, 42, 0.11);
+  background:
+    linear-gradient(90deg, rgba(255, 42, 42, 0.2), rgba(255, 42, 42, 0.06)),
+    #050506;
   color: var(--vt-red);
   font-family: var(--vt-font-ui);
-  font-size: 0.66rem;
+  font-size: 0.7rem;
   font-weight: 900;
   letter-spacing: 0.12em;
   text-transform: uppercase;
+  box-shadow: var(--vt-red-shadow);
+  padding: 0 18px;
 }
 
 .station-access:hover,

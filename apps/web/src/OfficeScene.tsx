@@ -62,10 +62,10 @@ function OfficeWorld({ signalScore, jobCount, applicationCount, compact }: Offic
   const cameraPath = useMemo(
     () => [
       { p: 0, camera: new THREE.Vector3(0, 2.9, 12.2), target: new THREE.Vector3(0, 0.72, -2.15) },
-      { p: 0.25, camera: new THREE.Vector3(-2.45, 1.92, 4.05), target: new THREE.Vector3(-1.65, 0.38, -0.38) },
-      { p: 0.54, camera: new THREE.Vector3(-5.85, 1.9, 3.95), target: new THREE.Vector3(-4.85, 0.38, -0.4) },
+      { p: 0.25, camera: new THREE.Vector3(-5.85, 1.9, 3.95), target: new THREE.Vector3(-4.85, 0.38, -0.4) },
+      { p: 0.54, camera: new THREE.Vector3(-2.45, 1.92, 4.05), target: new THREE.Vector3(-1.65, 0.38, -0.38) },
       { p: 0.78, camera: new THREE.Vector3(2.85, 1.92, 3.85), target: new THREE.Vector3(1.65, 0.38, -0.42) },
-      { p: 1, camera: new THREE.Vector3(5.45, 2.0, 3.95), target: new THREE.Vector3(4.35, 0.4, -0.36) },
+      { p: 1, camera: new THREE.Vector3(2.85, 1.92, 3.85), target: new THREE.Vector3(1.65, 0.38, -0.42) },
     ],
     [],
   );
@@ -733,7 +733,7 @@ function DeskCluster({
     { x: -4.85, z: 0.85, rotate: 0.08, screen: "curriculo" },
     { x: -1.65, z: 0.78, rotate: 0.02, screen: "radar" },
     { x: 1.65, z: 0.78, rotate: -0.02, screen: "pipeline" },
-    { x: 4.85, z: 0.85, rotate: -0.08, screen: "perfil" },
+    { x: 4.85, z: 0.85, rotate: -0.08, screen: "pipeline" },
   ];
   const visibleDesks = compact ? desks.slice(1, 3) : desks;
 
@@ -1317,7 +1317,7 @@ function WallScreenArray() {
         { x: -4.75, title: "VAGAS LIVE", variant: "world" },
         { x: -2.2, title: "MATCH OPS", variant: "ops" },
         { x: 2.2, title: "CANDIDATURAS", variant: "pipeline" },
-        { x: 4.75, title: "PERFIL", variant: "perfil" },
+        { x: 4.75, title: "CURRICULO", variant: "curriculo" },
       ].map((screen) => (
         <group key={screen.title} position={[screen.x, 2.42, -8.0]}>
           <RoundedBox args={[2.38, 1.32, 0.06]} radius={0.028} position={[0, 0, -0.075]}>

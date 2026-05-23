@@ -48,7 +48,11 @@ import {
 
 const OfficeScene = lazy(() => import("./OfficeScene").then((module) => ({ default: module.OfficeScene })));
 
-type StationId = "vagas" | "curriculo" | "kanban";
+type StationId = "radar" | "integracoes" | "curriculo" | "kanban" | "perfil" | "sobre";
+
+type IntegrationLinkId = "linkedin" | "portfolio" | "github" | "website";
+
+type IntegrationLinks = Record<IntegrationLinkId, string>;
 
 const stages: Array<{ id: Stage; label: string }> = [
   { id: "saved", label: "Salvas" },
@@ -73,6 +77,20 @@ const workflow = [
   },
 ];
 
+const integrationFields: Array<{ id: IntegrationLinkId; label: string; placeholder: string }> = [
+  { id: "linkedin", label: "LinkedIn", placeholder: "https://www.linkedin.com/in/seu-perfil" },
+  { id: "portfolio", label: "Portfólio", placeholder: "https://seuportfolio.com" },
+  { id: "github", label: "GitHub", placeholder: "https://github.com/seu-usuario" },
+  { id: "website", label: "Site pessoal", placeholder: "https://seusite.com.br" },
+];
+
+const emptyIntegrationLinks: IntegrationLinks = {
+  linkedin: "",
+  portfolio: "",
+  github: "",
+  website: "",
+};
+
 function App() {
   const [query, setQuery] = useState("");
   const [workModel, setWorkModel] = useState<WorkModel | "all">("all");
@@ -96,6 +114,8 @@ function App() {
   const [profileSaving, setProfileSaving] = useState(false);
   const [resumeUploading, setResumeUploading] = useState(false);
   const [activeStation, setActiveStation] = useState<StationId | null>(null);
+  const [integrationLinks, setIntegrationLinks] = useState<IntegrationLinks>(emptyIntegrationLinks);
+  const [integrationNotice, setIntegrationNotice] = useState("");
 
   useEffect(() => {
     let isMounted = true;
@@ -151,6 +171,22 @@ function App() {
       isMounted = false;
       unsubscribe();
     };
+  }, []);
+
+  useEffect(() => {
+    try {
+      const stored = window.localStorage.getItem("vitaey.integrationLinks");
+      if (!stored) return;
+      const parsed = JSON.parse(stored) as Partial<IntegrationLinks>;
+      setIntegrationLinks({
+        linkedin: parsed.linkedin ?? "",
+        portfolio: parsed.portfolio ?? "",
+        github: parsed.github ?? "",
+        website: parsed.website ?? "",
+      });
+    } catch {
+      setIntegrationLinks(emptyIntegrationLinks);
+    }
   }, []);
 
   useEffect(() => {
@@ -342,6 +378,16 @@ function App() {
     setActiveStation(station);
   }
 
+  function updateIntegrationLink(id: IntegrationLinkId, value: string) {
+    setIntegrationNotice("");
+    setIntegrationLinks((current) => ({ ...current, [id]: value }));
+  }
+
+  function saveIntegrationLinks() {
+    window.localStorage.setItem("vitaey.integrationLinks", JSON.stringify(integrationLinks));
+    setIntegrationNotice("Links profissionais salvos neste navegador.");
+  }
+
   return (
     <main className="experience-shell">
       <Suspense fallback={<div className="office-webgl office-webgl-fallback" aria-hidden="true" />}>
@@ -360,8 +406,11 @@ function App() {
         <nav className="nav-list" aria-label="Navegação principal">
           <a className="active" href="#dashboard"><LayoutDashboard /> Visão geral</a>
           <a href="#curriculo"><FileText /> Currículo</a>
-          <a href="#vagas"><BriefcaseBusiness /> Vagas</a>
-          <a href="#kanban"><ShieldCheck /> Candidaturas</a>
+          <a href="#radar"><Gauge /> Radar</a>
+          <a href="#kanban"><ShieldCheck /> Pipeline</a>
+          <a href="#integracoes"><BriefcaseBusiness /> Integrações</a>
+          <a href="#perfil"><UserRound /> Perfil</a>
+          <a href="#sobre"><LockKeyhole /> Sobre</a>
         </nav>
         <div className="status-cluster">
           <span className={`api-pill ${apiStatus}`}>{statusLabel(apiStatus)}</span>
@@ -385,8 +434,11 @@ function App() {
       <aside className="scene-rail" aria-label="Progresso da experiência">
         <a href="#dashboard"><span /> Lobby</a>
         <a href="#curriculo"><span /> Currículo</a>
-        <a href="#vagas"><span /> Radar</a>
+        <a href="#radar"><span /> Radar</a>
         <a href="#kanban"><span /> Pipeline</a>
+        <a href="#integracoes"><span /> Integrações</a>
+        <a href="#perfil"><span /> Perfil</a>
+        <a href="#sobre"><span /> Sobre</a>
       </aside>
 
       <section className="scene-section hero-section" id="dashboard" aria-label="Resumo do Vitaey">
@@ -398,7 +450,7 @@ function App() {
             Encontre oportunidades, calibre seu currículo e avance candidaturas com revisão manual antes de qualquer envio.
           </p>
           <div className="hero-actions">
-            <a className="hero-primary" href="#vagas">Explorar vagas <ArrowRight /></a>
+            <a className="hero-primary" href="#radar">Explorar vagas <ArrowRight /></a>
             <a className="hero-secondary" href="#curriculo">Revisar currículo</a>
           </div>
           <div className="assurance-strip" aria-label="Garantias do fluxo">
@@ -436,10 +488,10 @@ function App() {
         </div>
       ) : null}
 
-      <section className="scene-section jobs-section" id="vagas" aria-label="Vagas recomendadas">
+      <section className="scene-section jobs-section radar-section" id="radar" aria-label="Radar de vagas">
         <div className="section-frame section-intro">
           <span className="section-kicker">Estação 02 // Radar</span>
-          <h2>Vagas recomendadas</h2>
+          <h2>Radar de vagas</h2>
           <p>
             {jobs.length
               ? `${filteredJobs.length} oportunidades no radar com ${activeFilters} filtro(s) ativo(s).`
@@ -448,15 +500,15 @@ function App() {
         </div>
 
         <StationGate
-          id="vagas"
+          id="radar"
           activeStation={activeStation}
           station="Radar"
           buttonLabel="Abrir radar"
           onOpen={openStation}
         />
 
-        {activeStation === "vagas" ? (
-          <div className="station-workspace" data-station-workspace="vagas">
+        {activeStation === "radar" ? (
+          <div className="station-workspace" data-station-workspace="radar">
             <WorkspaceDock title="Radar de vagas" onClose={() => setActiveStation(null)} />
             <div className="opportunity-console">
           <div className="filters">
@@ -784,6 +836,177 @@ function App() {
         ) : null}
       </section>
 
+      <section className="scene-section integrations-section" id="integracoes" aria-label="Integrações profissionais">
+        <div className="section-frame section-intro">
+          <span className="section-kicker">Estação 04 // Integrações</span>
+          <h2>Integrações profissionais</h2>
+          <p>Conecte páginas públicas como LinkedIn, portfólio, GitHub e site pessoal ao perfil Vitaey.</p>
+        </div>
+
+        <StationGate
+          id="integracoes"
+          activeStation={activeStation}
+          station="Integrações"
+          buttonLabel="Abrir integrações"
+          onOpen={openStation}
+        />
+
+        {activeStation === "integracoes" ? (
+          <div className="station-workspace" data-station-workspace="integracoes">
+            <WorkspaceDock title="Integrações profissionais" onClose={() => setActiveStation(null)} />
+            <div className="integrations-workspace">
+              <div className="panel-heading compact-heading">
+                <div>
+                  <span className="section-kicker">Links públicos</span>
+                  <h2>Conecte suas páginas profissionais</h2>
+                  <p>Use links reais para fortalecer o perfil antes de revisar vagas e candidaturas.</p>
+                </div>
+                <BriefcaseBusiness />
+              </div>
+              <div className="integration-link-grid">
+                {integrationFields.map((field) => (
+                  <label className="integration-link-field" key={field.id}>
+                    <span>{field.label}</span>
+                    <input
+                      value={integrationLinks[field.id]}
+                      onChange={(event) => updateIntegrationLink(field.id, event.target.value)}
+                      placeholder={field.placeholder}
+                      inputMode="url"
+                    />
+                  </label>
+                ))}
+              </div>
+              <div className="profile-actions">
+                <button className="primary" type="button" onClick={saveIntegrationLinks}>
+                  Salvar integrações
+                </button>
+                {integrationNotice ? <span className="inline-notice">{integrationNotice}</span> : null}
+              </div>
+              <div className="integration-preview">
+                {integrationFields.map((field) => {
+                  const href = normalizeExternalUrl(integrationLinks[field.id]);
+                  return href ? (
+                    <a href={href} target="_blank" rel="noreferrer" key={field.id}>
+                      Abrir {field.label}
+                    </a>
+                  ) : (
+                    <span key={field.id}>{field.label} não conectado</span>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        ) : null}
+      </section>
+
+      <section className="scene-section profile-section" id="perfil" aria-label="Perfil de matching">
+        <div className="section-frame section-intro">
+          <span className="section-kicker">Estação 05 // Perfil</span>
+          <h2>Perfil de matching</h2>
+          <p>{profile.headline || "O perfil aparece aqui com os dados sincronizados do candidato."}</p>
+        </div>
+
+        <StationGate
+          id="perfil"
+          activeStation={activeStation}
+          station="Perfil"
+          buttonLabel="Abrir perfil"
+          onOpen={openStation}
+        />
+
+        {activeStation === "perfil" ? (
+          <div className="station-workspace" data-station-workspace="perfil">
+            <WorkspaceDock title="Perfil de matching" onClose={() => setActiveStation(null)} />
+            <div className="profile-station">
+              <div className="panel-heading compact-heading">
+                <div>
+                  <span className="section-kicker">Dados sincronizados</span>
+                  <h2>{profile.fullName || "Perfil sem nome informado"}</h2>
+                  <p>{profile.headline || "Atualize o currículo para melhorar a leitura do perfil."}</p>
+                </div>
+                <UserRound />
+              </div>
+              <div className="profile-summary-grid">
+                <article>
+                  <span>Localidade</span>
+                  <strong>{profile.location || "Não informada"}</strong>
+                </article>
+                <article>
+                  <span>Senioridade</span>
+                  <strong>{profile.seniority || "Não informada"}</strong>
+                </article>
+                <article>
+                  <span>Modelo</span>
+                  <strong>{profile.remoteFirst ? "Prioriza remoto" : "Aberto a híbrido/presencial"}</strong>
+                </article>
+                <article>
+                  <span>Salário mínimo</span>
+                  <strong>{profile.salaryMin ? `R$ ${profile.salaryMin.toLocaleString("pt-BR")}` : "Não definido"}</strong>
+                </article>
+              </div>
+              <SectionList title="Funções alvo" items={profile.targetRoles} />
+              <SectionList title="Skills mapeadas" items={profile.skills.slice(0, 12)} subtle />
+            </div>
+          </div>
+        ) : null}
+      </section>
+
+      <section className="scene-section about-section" id="sobre" aria-label="Sobre o Vitaey">
+        <div className="section-frame section-intro">
+          <span className="section-kicker">Estação 06 // Sobre</span>
+          <h2>Sobre o Vitaey</h2>
+          <p>Informações institucionais, privacidade e termos de uso reunidos em uma estação própria.</p>
+        </div>
+
+        <StationGate
+          id="sobre"
+          activeStation={activeStation}
+          station="Sobre"
+          buttonLabel="Abrir sobre"
+          onOpen={openStation}
+        />
+
+        {activeStation === "sobre" ? (
+          <div className="station-workspace" data-station-workspace="sobre">
+            <WorkspaceDock title="Sobre o Vitaey" onClose={() => setActiveStation(null)} />
+            <div className="about-workspace">
+              <article>
+                <span className="section-kicker">Sobre nós</span>
+                <h3>O Vitaey organiza a busca de emprego com revisão manual.</h3>
+                <p>
+                  O produto conecta perfil, currículo, vagas e candidaturas em um fluxo único para o usuário encontrar oportunidades,
+                  revisar dados antes de enviar e acompanhar cada etapa com clareza.
+                </p>
+              </article>
+              <article>
+                <span className="section-kicker">Política de privacidade</span>
+                <h3>Dados de currículo e perfil ficam ligados à conta do usuário.</h3>
+                <p>
+                  As informações são usadas para matching, filtros, histórico de candidaturas e melhoria da experiência. O usuário deve
+                  manter controle sobre envio de currículo, revisão de candidatura e autenticação da conta.
+                </p>
+              </article>
+              <article>
+                <span className="section-kicker">Termos de uso</span>
+                <h3>Cada candidatura depende de ação confirmada pelo usuário.</h3>
+                <p>
+                  O Vitaey não promete contratação, não substitui análise humana de recrutadores e não deve enviar candidaturas sem
+                  confirmação. O usuário é responsável pela veracidade dos dados enviados.
+                </p>
+              </article>
+              <article>
+                <span className="section-kicker">Segurança</span>
+                <h3>Revisão, consentimento e rastreabilidade são parte do fluxo.</h3>
+                <p>
+                  A experiência foi desenhada para evitar envio automático em massa, preservar contexto da candidatura e manter o usuário
+                  no controle do perfil profissional.
+                </p>
+              </article>
+            </div>
+          </div>
+        ) : null}
+      </section>
+
       {applyJob ? (
         <div className="modal-backdrop" role="presentation" onMouseDown={() => setApplyJob(null)}>
           <section className="apply-modal" role="dialog" aria-modal="true" aria-labelledby="apply-title" onMouseDown={(event) => event.stopPropagation()}>
@@ -937,6 +1160,19 @@ function splitList(value: string): string[] {
     .split(",")
     .map((item) => item.trim().toLowerCase())
     .filter(Boolean);
+}
+
+function normalizeExternalUrl(value: string): string | null {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+
+  try {
+    const url = new URL(trimmed.includes("://") ? trimmed : `https://${trimmed}`);
+    if (!["http:", "https:"].includes(url.protocol)) return null;
+    return url.toString();
+  } catch {
+    return null;
+  }
 }
 
 function auditLabel(eventType: string) {

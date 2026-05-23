@@ -62,10 +62,12 @@ function OfficeWorld({ signalScore, jobCount, applicationCount, compact }: Offic
   const cameraPath = useMemo(
     () => [
       { p: 0, camera: new THREE.Vector3(0, 2.9, 12.2), target: new THREE.Vector3(0, 0.72, -2.15) },
-      { p: 0.25, camera: new THREE.Vector3(-5.85, 1.9, 3.95), target: new THREE.Vector3(-4.85, 0.38, -0.4) },
-      { p: 0.54, camera: new THREE.Vector3(-2.45, 1.92, 4.05), target: new THREE.Vector3(-1.65, 0.38, -0.38) },
-      { p: 0.78, camera: new THREE.Vector3(2.85, 1.92, 3.85), target: new THREE.Vector3(1.65, 0.38, -0.42) },
-      { p: 1, camera: new THREE.Vector3(2.85, 1.92, 3.85), target: new THREE.Vector3(1.65, 0.38, -0.42) },
+      { p: 0.18, camera: new THREE.Vector3(-5.85, 1.9, 3.95), target: new THREE.Vector3(-4.85, 0.38, -0.4) },
+      { p: 0.34, camera: new THREE.Vector3(-3.3, 1.92, 4.0), target: new THREE.Vector3(-1.65, 0.38, -0.38) },
+      { p: 0.5, camera: new THREE.Vector3(2.45, 1.92, 3.85), target: new THREE.Vector3(1.65, 0.38, -0.42) },
+      { p: 0.66, camera: new THREE.Vector3(5.25, 2.0, 3.9), target: new THREE.Vector3(4.85, 0.38, -0.42) },
+      { p: 0.83, camera: new THREE.Vector3(-2.2, 2.35, -1.65), target: new THREE.Vector3(-2.2, 2.42, -8.05) },
+      { p: 1, camera: new THREE.Vector3(2.2, 2.35, -1.65), target: new THREE.Vector3(2.2, 2.42, -8.05) },
     ],
     [],
   );
@@ -733,7 +735,7 @@ function DeskCluster({
     { x: -4.85, z: 0.85, rotate: 0.08, screen: "curriculo" },
     { x: -1.65, z: 0.78, rotate: 0.02, screen: "radar" },
     { x: 1.65, z: 0.78, rotate: -0.02, screen: "pipeline" },
-    { x: 4.85, z: 0.85, rotate: -0.08, screen: "pipeline" },
+    { x: 4.85, z: 0.85, rotate: -0.08, screen: "integracoes" },
   ];
   const visibleDesks = compact ? desks.slice(1, 3) : desks;
 
@@ -1315,9 +1317,9 @@ function WallScreenArray() {
       </mesh>
       {[
         { x: -4.75, title: "VAGAS LIVE", variant: "world" },
-        { x: -2.2, title: "MATCH OPS", variant: "ops" },
-        { x: 2.2, title: "CANDIDATURAS", variant: "pipeline" },
-        { x: 4.75, title: "CURRICULO", variant: "curriculo" },
+        { x: -2.2, title: "PERFIL", variant: "perfil" },
+        { x: 2.2, title: "SOBRE", variant: "sobre" },
+        { x: 4.75, title: "INTEGRACOES", variant: "integracoes" },
       ].map((screen) => (
         <group key={screen.title} position={[screen.x, 2.42, -8.0]}>
           <RoundedBox args={[2.38, 1.32, 0.06]} radius={0.028} position={[0, 0, -0.075]}>
@@ -1761,9 +1763,13 @@ function makeScreenTexture(variant: string, title = "VITAEY", metric?: string) {
           ? "CURRICULO"
           : variant === "perfil"
             ? "PERFIL"
+            : variant === "integracoes"
+              ? "INTEGRACOES"
+              : variant === "sobre"
+                ? "SOBRE"
             : "MATCH";
   ctx.fillStyle = "#f3f0ea";
-  ctx.font = headline.length > 7 ? "700 58px Georgia" : "700 74px Georgia";
+  ctx.font = headline.length > 10 ? "700 48px Georgia" : headline.length > 7 ? "700 58px Georgia" : "700 74px Georgia";
   ctx.fillText(headline, 54, 152);
 
   drawScreenVariant(ctx, variant, metric);
@@ -1829,6 +1835,38 @@ function drawScreenVariant(ctx: CanvasRenderingContext2D, variant: string, metri
       ctx.fillStyle = "#f3f0ea";
       ctx.font = "700 16px Arial";
       ctx.fillText(label, x + 18, 476);
+    });
+    return;
+  }
+
+  if (variant === "integracoes") {
+    ["LINKEDIN", "PORTFOLIO", "GITHUB", "SITE"].forEach((label, index) => {
+      const y = 230 + index * 72;
+      ctx.strokeStyle = index % 2 ? "rgba(107,231,255,0.55)" : "rgba(255,42,42,0.65)";
+      ctx.strokeRect(72, y, 780, 44);
+      ctx.fillStyle = "#f3f0ea";
+      ctx.font = "700 22px Arial";
+      ctx.fillText(label, 98, y + 30);
+      ctx.fillStyle = index % 2 ? "rgba(107,231,255,0.34)" : "rgba(255,42,42,0.34)";
+      ctx.fillRect(320, y + 15, 450 - index * 52, 10);
+      ctx.beginPath();
+      ctx.arc(870, y + 22, 14, 0, Math.PI * 2);
+      ctx.fill();
+    });
+    return;
+  }
+
+  if (variant === "sobre") {
+    ["PRIVACIDADE", "TERMOS", "SOBRE NOS", "SEGURANCA"].forEach((label, index) => {
+      const x = 78 + (index % 2) * 430;
+      const y = 240 + Math.floor(index / 2) * 122;
+      ctx.strokeStyle = index % 2 ? "rgba(107,231,255,0.52)" : "rgba(255,42,42,0.58)";
+      ctx.strokeRect(x, y, 350, 82);
+      ctx.fillStyle = "#f3f0ea";
+      ctx.font = "700 20px Arial";
+      ctx.fillText(label, x + 28, y + 38);
+      ctx.fillStyle = "rgba(255,255,255,0.18)";
+      ctx.fillRect(x + 28, y + 54, 210, 8);
     });
     return;
   }

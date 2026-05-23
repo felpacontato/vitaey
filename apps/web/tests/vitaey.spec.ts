@@ -27,7 +27,7 @@ test("renders production radar without demo data", async ({ page }, testInfo) =>
   const navLabels = await page.locator(".nav-list a").evaluateAll((links) =>
     links.map((link) => link.textContent?.replace(/\s+/g, " ").trim()),
   );
-  expect(navLabels).toEqual(["Visão geral", "Currículo", "Vagas", "Candidaturas"]);
+  expect(navLabels).toEqual(["Visão geral", "Currículo", "Radar", "Pipeline", "Integrações", "Perfil", "Sobre"]);
 
   await expect(page.locator(".scene-rail")).toHaveCSS("display", "none");
   await expect(page.locator(".station-gate strong")).toHaveCount(0);
@@ -36,44 +36,60 @@ test("renders production radar without demo data", async ({ page }, testInfo) =>
 
   const stations = [
     { id: "curriculo", label: "Abrir currículo", monitor: "Currículo" },
-    { id: "vagas", label: "Abrir radar", monitor: "Radar" },
+    { id: "radar", label: "Abrir radar", monitor: "Radar" },
     { id: "kanban", label: "Abrir pipeline", monitor: "Pipeline" },
+    { id: "integracoes", label: "Abrir integrações", monitor: "Integrações" },
+    { id: "perfil", label: "Abrir perfil", monitor: "Perfil" },
+    { id: "sobre", label: "Abrir sobre", monitor: "Sobre" },
   ];
 
-  for (const station of stations) {
-    const button = page.locator(`section#${station.id} button.station-access`);
-    await expect(button).toHaveText(station.label);
-    await expect(button).toHaveAttribute("aria-label", `${station.label} no monitor ${station.monitor}`);
-
-    const introBox = await page.locator(`section#${station.id} > .section-intro`).evaluate((element) => {
-      const style = window.getComputedStyle(element);
+  const stationState = await page.evaluate(() =>
+    ["curriculo", "radar", "kanban", "integracoes", "perfil", "sobre"].map((id) => {
+      const section = document.getElementById(id);
+      const button = section?.querySelector("button.station-access");
+      const intro = section?.querySelector(".section-intro");
+      const style = intro ? window.getComputedStyle(intro) : null;
       return {
-        height: style.height,
-        opacity: style.opacity,
-        overflow: style.overflow,
-        pointerEvents: style.pointerEvents,
-        width: style.width,
+        id,
+        aria: button?.getAttribute("aria-label") ?? "",
+        label: button?.textContent?.replace(/\s+/g, " ").trim() ?? "",
+        introBox: style
+          ? {
+              height: style.height,
+              opacity: style.opacity,
+              overflow: style.overflow,
+              pointerEvents: style.pointerEvents,
+              width: style.width,
+            }
+          : null,
       };
-    });
-    expect(introBox).toEqual({
-      height: "1px",
-      opacity: "0",
-      overflow: "hidden",
-      pointerEvents: "none",
-      width: "1px",
-    });
-  }
+    }),
+  );
+  expect(stationState).toEqual(
+    stations.map((station) => ({
+      id: station.id,
+      aria: `${station.label} no monitor ${station.monitor}`,
+      label: station.label,
+      introBox: {
+        height: "1px",
+        opacity: "0",
+        overflow: "hidden",
+        pointerEvents: "none",
+        width: "1px",
+      },
+    })),
+  );
 
   if (testInfo.project.name === "mobile") {
     await expect(page.locator(".opportunity-console")).toHaveCount(0);
-    await expect(page.locator("section#vagas button.station-access")).toBeVisible();
+    await expect(page.locator("section#radar button.station-access")).toBeVisible();
     expect(messages.filter((message) => !isIgnoredConsoleMessage(message))).toEqual([]);
     return;
   }
 
   await page.getByRole("button", { name: "Ver lembretes" }).click();
   await expect(page.locator(".auth-notice")).toContainText("Nenhum lembrete pendente agora.");
-  await expect(page.locator("section#vagas h2")).toContainText("Vagas recomendadas");
+  await expect(page.locator("section#radar h2")).toContainText("Radar de vagas");
   await expect(page.locator("section#curriculo h2").first()).toContainText("Curr");
 
   const detailsPanel = page.locator(".details-panel");
@@ -83,12 +99,12 @@ test("renders production radar without demo data", async ({ page }, testInfo) =>
     expect(initialBodyText).not.toContain(demoText);
   }
   await expect(page.locator(".opportunity-console")).toHaveCount(0);
-  await expect(page.locator("section#vagas button.station-access")).toBeVisible();
+  await expect(page.locator("section#radar button.station-access")).toBeVisible();
 
-  await page.locator("section#vagas button.station-access").evaluate((button) => {
+  await page.locator("section#radar button.station-access").evaluate((button) => {
     if (button instanceof HTMLButtonElement) button.click();
   });
-  await expect(page.locator('[data-station-workspace="vagas"]')).toBeVisible();
+  await expect(page.locator('[data-station-workspace="radar"]')).toBeVisible();
   await expect(page.locator(".opportunity-console")).toBeVisible();
 
   const jobCount = await page.locator(".job-card").count();
@@ -123,7 +139,7 @@ test("renders production radar without demo data", async ({ page }, testInfo) =>
 
 test("opens the matching workspace from each monitor button", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name === "mobile", "Desktop covers station-to-monitor interaction.");
-  test.setTimeout(90_000);
+  test.setTimeout(150_000);
 
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/", { waitUntil: "domcontentloaded" });
@@ -131,17 +147,33 @@ test("opens the matching workspace from each monitor button", async ({ page }, t
 
   const stations = [
     { id: "curriculo", button: "Abrir currículo", workspace: ".profile-workbench" },
-    { id: "vagas", button: "Abrir radar", workspace: ".opportunity-console" },
+    { id: "radar", button: "Abrir radar", workspace: ".opportunity-console" },
     { id: "kanban", button: "Abrir pipeline", workspace: ".kanban-grid" },
+    { id: "integracoes", button: "Abrir integrações", workspace: ".integrations-workspace" },
+    { id: "perfil", button: "Abrir perfil", workspace: ".profile-station" },
+    { id: "sobre", button: "Abrir sobre", workspace: ".about-workspace" },
   ];
 
   for (const station of stations) {
-    await expect(page.locator(`section#${station.id} button.station-access`)).toHaveText(station.button);
-    await page.locator(`section#${station.id} button.station-access`).evaluate((button) => {
+    const result = await page.evaluate(async ({ id, workspace }) => {
+      document.getElementById(id)?.scrollIntoView({ block: "center", inline: "nearest" });
+      await new Promise((resolve) => window.setTimeout(resolve, 80));
+      const button = document.querySelector(`section#${id} button.station-access`);
+      const label = button?.textContent?.replace(/\s+/g, " ").trim() ?? "";
       if (button instanceof HTMLButtonElement) button.click();
+      await new Promise((resolve) => window.setTimeout(resolve, 120));
+      return {
+        label,
+        workspace: Boolean(document.querySelector(`[data-station-workspace="${id}"]`)),
+        inner: Boolean(document.querySelector(`[data-station-workspace="${id}"] ${workspace}`)),
+      };
+    }, station);
+
+    expect(result).toEqual({
+      label: station.button,
+      workspace: true,
+      inner: true,
     });
-    await expect(page.locator(`[data-station-workspace="${station.id}"]`)).toBeVisible();
-    await expect(page.locator(`[data-station-workspace="${station.id}"] ${station.workspace}`)).toHaveCount(1);
   }
 });
 

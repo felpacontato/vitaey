@@ -844,7 +844,8 @@ function StationGate({
   const isActive = activeStation === id;
 
   return (
-    <div className={`station-gate ${isActive ? "is-active" : ""}`}>
+    <div className={`station-gate station-gate--${id} ${isActive ? "is-active" : ""}`}>
+      <span className="monitor-lock" aria-hidden="true">Monitor conectado</span>
       <span className="section-kicker">{station}</span>
       <strong>{title}</strong>
       <p>{copy}</p>

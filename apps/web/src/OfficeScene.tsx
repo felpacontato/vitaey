@@ -62,10 +62,10 @@ function OfficeWorld({ signalScore, jobCount, applicationCount, compact }: Offic
   const cameraPath = useMemo(
     () => [
       { p: 0, camera: new THREE.Vector3(0, 2.9, 12.2), target: new THREE.Vector3(0, 0.72, -2.15) },
-      { p: 0.25, camera: new THREE.Vector3(-5.45, 2.08, 5.0), target: new THREE.Vector3(-1.4, 0.35, -1.9) },
-      { p: 0.54, camera: new THREE.Vector3(-0.4, 2.0, 4.75), target: new THREE.Vector3(-3.45, 0.55, -2.45) },
-      { p: 0.78, camera: new THREE.Vector3(5.35, 2.1, 4.15), target: new THREE.Vector3(4.0, 0.38, -2.55) },
-      { p: 1, camera: new THREE.Vector3(0, 2.55, 9.75), target: new THREE.Vector3(0, 0.2, -2.3) },
+      { p: 0.25, camera: new THREE.Vector3(-2.45, 1.92, 4.05), target: new THREE.Vector3(-1.65, 0.38, -0.38) },
+      { p: 0.54, camera: new THREE.Vector3(-5.85, 1.9, 3.95), target: new THREE.Vector3(-4.85, 0.38, -0.4) },
+      { p: 0.78, camera: new THREE.Vector3(2.85, 1.92, 3.85), target: new THREE.Vector3(1.65, 0.38, -0.42) },
+      { p: 1, camera: new THREE.Vector3(5.45, 2.0, 3.95), target: new THREE.Vector3(4.35, 0.4, -0.36) },
     ],
     [],
   );
